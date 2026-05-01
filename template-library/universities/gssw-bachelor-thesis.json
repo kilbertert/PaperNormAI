@@ -1,0 +1,467 @@
+{
+  "id": "gssw-bachelor-thesis-2026",
+  "university": "广州软件学院",
+  "degree_type": "bachelor",
+  "discipline": "本科毕业论文（设计）",
+  "version": "1.0",
+  "is_active": true,
+  "file_path": "references/gssw-bachelor-thesis-spec.docx",
+  "created_at": "2026-05-02T00:00:00Z",
+  "updated_at": "2026-05-02T00:00:00Z",
+  "metadata": {
+    "author": "广州软件学院教务处",
+    "description": "广州软件学院本科生毕业论文（设计）规范化要求",
+    "source_document": "（学生版）关于学生做好毕业设计、实习后期工作的通知",
+    "tags": ["广州软件学院", "本科", "毕业论文", "排版规范"]
+  },
+  "rules": [
+    {
+      "id": "page_setup",
+      "name": "页面设置",
+      "level": "L1",
+      "description": "纸型为A4，上下页边距为2.54cm、左边距为3.0cm、右边距为2.6cm、正文行距为固定值23磅",
+      "severity": "error",
+      "auto_fixable": false,
+      "params": {
+        "paper_size": "A4",
+        "top": 2.54,
+        "bottom": 2.54,
+        "left": 3.0,
+        "right": 2.6,
+        "line_spacing": 23,
+        "line_spacing_unit": "pt",
+        "unit": "cm"
+      }
+    },
+    {
+      "id": "font_name_body",
+      "name": "正文字体",
+      "level": "L1",
+      "description": "正文应使用宋体，小四号",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": "宋体",
+        "allowed_fonts": ["宋体", "SimSun", "Times New Roman"],
+        "font_size": 12,
+        "font_size_unit": "pt"
+      }
+    },
+    {
+      "id": "font_name_heading_chapter",
+      "name": "章标题字体",
+      "level": "L1",
+      "description": "每章标题以三号黑体居中打印",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": "黑体",
+        "allowed_fonts": ["黑体", "SimHei"],
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "alignment": "center",
+        "heading_level": 1
+      }
+    },
+    {
+      "id": "font_name_heading_section",
+      "name": "节标题字体",
+      "level": "L1",
+      "description": "节以小四号黑体左起打印",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": "黑体",
+        "allowed_fonts": ["黑体", "SimHei"],
+        "font_size": 12,
+        "font_size_unit": "pt",
+        "alignment": "left",
+        "heading_level": 2
+      }
+    },
+    {
+      "id": "font_name_heading_subsection",
+      "name": "小节标题字体",
+      "level": "L1",
+      "description": "小节以小四号黑体左起打印",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": "黑体",
+        "allowed_fonts": ["黑体", "SimHei"],
+        "font_size": 12,
+        "font_size_unit": "pt",
+        "alignment": "left",
+        "heading_level": 3
+      }
+    },
+    {
+      "id": "font_size_body",
+      "name": "正文字号",
+      "level": "L1",
+      "description": "正文用宋体小四号字（约12pt）",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": 12,
+        "tolerance": 0.5,
+        "unit": "pt"
+      }
+    },
+    {
+      "id": "line_spacing",
+      "name": "正文行距",
+      "level": "L1",
+      "description": "正文行距为固定值23磅",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": 23,
+        "tolerance": 0.5,
+        "unit": "pt",
+        "line_spacing_type": "fixed"
+      }
+    },
+    {
+      "id": "paragraph_spacing_body",
+      "name": "正文段落间距",
+      "level": "L1",
+      "description": "正文段落段前0行，段后0行，首行缩进2字符",
+      "severity": "warning",
+      "auto_fixable": true,
+      "params": {
+        "space_before": 0,
+        "space_after": 0,
+        "first_line_indent": 2,
+        "indent_unit": "character"
+      }
+    },
+    {
+      "id": "paragraph_spacing_heading_chapter",
+      "name": "章标题段落间距",
+      "level": "L1",
+      "description": "章标题下空二行",
+      "severity": "warning",
+      "auto_fixable": true,
+      "params": {
+        "space_before": 0,
+        "space_after": 2,
+        "spacing_unit": "line",
+        "heading_level": 1
+      }
+    },
+    {
+      "id": "paragraph_spacing_heading_section",
+      "name": "节标题段落间距",
+      "level": "L1",
+      "description": "节下空一行为小节",
+      "severity": "warning",
+      "auto_fixable": true,
+      "params": {
+        "space_before": 2,
+        "space_after": 1,
+        "spacing_unit": "line",
+        "heading_level": 2
+      }
+    },
+    {
+      "id": "page_margin",
+      "name": "页边距",
+      "level": "L1",
+      "description": "上下页边距为2.54cm、左边距为3.0cm、右边距为2.6cm",
+      "severity": "error",
+      "auto_fixable": false,
+      "params": {
+        "top": 2.54,
+        "bottom": 2.54,
+        "left": 3.0,
+        "right": 2.6,
+        "unit": "cm",
+        "tolerance": 0.1
+      }
+    },
+    {
+      "id": "abstract_chinese_heading",
+      "name": "中文摘要标题",
+      "level": "L1",
+      "description": ""摘要"两字间空两格，三号黑体，加粗，居中打印",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text": "摘要",
+        "expected_font": "黑体",
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "bold": true,
+        "alignment": "center",
+        "space_before_text": 2,
+        "space_before_unit": "character"
+      }
+    },
+    {
+      "id": "abstract_chinese_content",
+      "name": "中文摘要内容",
+      "level": "L1",
+      "description": "另起一行打印摘要内容，首行缩进2字符，小四号宋体",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_font": "宋体",
+        "font_size": 12,
+        "font_size_unit": "pt",
+        "first_line_indent": 2,
+        "first_line_indent_unit": "character"
+      }
+    },
+    {
+      "id": "keywords_chinese_heading",
+      "name": "中文关键词标题",
+      "level": "L1",
+      "description": ""关键词"三字，三号黑体，加粗，后接冒号"："",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text_pattern": "关键词.*",
+        "expected_font": "黑体",
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "bold": true,
+        "alignment": "left"
+      }
+    },
+    {
+      "id": "keywords_chinese_content",
+      "name": "中文关键词内容",
+      "level": "L1",
+      "description": "各个关键词用小四号宋体，其间用分号";"隔开，最后一个关键词后不打标点符号",
+      "severity": "warning",
+      "auto_fixable": false,
+      "params": {
+        "expected_font": "宋体",
+        "font_size": 12,
+        "font_size_unit": "pt",
+        "separator": "；"
+      }
+    },
+    {
+      "id": "abstract_english_heading",
+      "name": "英文摘要标题",
+      "level": "L1",
+      "description": "英文"ABSTRACT"用三号Times New Roman字体，加粗，居中",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text": "ABSTRACT",
+        "expected_font": "Times New Roman",
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "bold": true,
+        "alignment": "center"
+      }
+    },
+    {
+      "id": "abstract_english_content",
+      "name": "英文摘要内容",
+      "level": "L1",
+      "description": "用小四号Times New Roman字体",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_font": "Times New Roman",
+        "font_size": 12,
+        "font_size_unit": "pt"
+      }
+    },
+    {
+      "id": "keywords_english_heading",
+      "name": "英文关键词标题",
+      "level": "L1",
+      "description": ""KEY WORDS"，用三号Times New Roman字体，加粗",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text_pattern": "KEY WORDS.*",
+        "expected_font": "Times New Roman",
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "bold": true
+      }
+    },
+    {
+      "id": "keywords_english_content",
+      "name": "英文关键词内容",
+      "level": "L1",
+      "description": "各关键词用小四号Times New Roman字体，每一关键词之间用分号"；"隔开",
+      "severity": "warning",
+      "auto_fixable": false,
+      "params": {
+        "expected_font": "Times New Roman",
+        "font_size": 12,
+        "font_size_unit": "pt",
+        "separator": ";",
+        "lowercase": true
+      }
+    },
+    {
+      "id": "toc_heading",
+      "name": "目录标题",
+      "level": "L1",
+      "description": ""目录"二字为小二号黑体，居中打印",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text": "目录",
+        "expected_font": "黑体",
+        "font_size": 18,
+        "font_size_unit": "pt",
+        "bold": true,
+        "alignment": "center"
+      }
+    },
+    {
+      "id": "toc_content",
+      "name": "目录内容",
+      "level": "L2",
+      "description": "章、节、小节及其开始页码（小四宋体）",
+      "severity": "warning",
+      "auto_fixable": false,
+      "params": {
+        "expected_font": "宋体",
+        "font_size": 12,
+        "font_size_unit": "pt"
+      }
+    },
+    {
+      "id": "heading_numbering",
+      "name": "章节编号",
+      "level": "L2",
+      "description": "章节编号用分级阿拉伯数字编号1、1.1、1.1.1 或一、（一）、1.",
+      "severity": "warning",
+      "auto_fixable": false,
+      "params": {
+        "styles": ["arabic", "chinese_brackets", "chinese_parens"],
+        "max_level": 3
+      }
+    },
+    {
+      "id": "heading_level",
+      "name": "标题层级",
+      "level": "L2",
+      "description": "标题层级应连续，不能跳级",
+      "severity": "error",
+      "auto_fixable": false,
+      "params": {
+        "max_level": 3
+      }
+    },
+    {
+      "id": "figure_caption",
+      "name": "图题",
+      "level": "L1",
+      "description": "图题采用中文，中文字体为五号宋体。图号以章为单位顺序编号",
+      "severity": "warning",
+      "auto_fixable": true,
+      "params": {
+        "expected_font": "宋体",
+        "font_size": 10.5,
+        "font_size_unit": "pt",
+        "numbering": "by_chapter"
+      }
+    },
+    {
+      "id": "table_caption",
+      "name": "表格标题",
+      "level": "L1",
+      "description": "表序、表题应写在表格上方正中，表内必须按规定的符号标注单位",
+      "severity": "warning",
+      "auto_fixable": true,
+      "params": {
+        "expected_font": "宋体",
+        "font_size": 10.5,
+        "font_size_unit": "pt",
+        "caption_position": "above_center",
+        "numbering": "by_chapter"
+      }
+    },
+    {
+      "id": "formula_format",
+      "name": "公式格式",
+      "level": "L2",
+      "description": "公式书写应在文中另起一行，居中排列。公式序号按章顺序编号",
+      "severity": "warning",
+      "auto_fixable": false,
+      "params": {
+        "alignment": "center",
+        "numbering": "by_chapter"
+      }
+    },
+    {
+      "id": "reference_numbering",
+      "name": "参考文献编号",
+      "level": "L2",
+      "description": "按论文中参考文献出现的先后顺序用中[]阿拉伯数字连续编号",
+      "severity": "error",
+      "auto_fixable": false,
+      "params": {
+        "style": "numeric_brackets",
+        "pattern": "\\[\\d+\\]"
+      }
+    },
+    {
+      "id": "reference_format",
+      "name": "参考文献格式",
+      "level": "L3",
+      "description": "参考文献中每条项目应齐全，格式符合GB7714-2015",
+      "severity": "error",
+      "auto_fixable": false,
+      "params": {
+        "style": "GB7714-2015"
+      }
+    },
+    {
+      "id": "preface_heading",
+      "name": "前言标题",
+      "level": "L1",
+      "description": ""前言"二字为三号黑体，居中打印；二字之间空一字符",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text": "前言",
+        "expected_font": "黑体",
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "bold": true,
+        "alignment": "center",
+        "space_before_text": 1,
+        "space_before_unit": "character"
+      }
+    },
+    {
+      "id": "conclusion_heading",
+      "name": "结论标题",
+      "level": "L1",
+      "description": "结论以章标题格式居中打印",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "text_pattern": "结论",
+        "expected_font": "黑体",
+        "font_size": 16,
+        "font_size_unit": "pt",
+        "bold": true,
+        "alignment": "center"
+      }
+    },
+    {
+      "id": "citation_format",
+      "name": "引用格式",
+      "level": "L3",
+      "description": "引用应符合学术规范，格式为(作者, 年份)或[序号]",
+      "severity": "warning",
+      "auto_fixable": false,
+      "params": {
+        "styles": ["academic", "numeric_brackets"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_woz_code__Search",
+      "mcp__plugin_woz_code__Edit",
+      "Bash(node *)",
+      "Bash(python -c \"from app.api.endpoints import templates, auth; print\\('Imports OK'\\)\")",
+      "Bash(python -m py_compile app/api/endpoints/templates.py app/api/endpoints/auth.py)",
+      "Bash(python -c ' *)",
+      "Bash(pip install *)",
+      "Bash(python -m py_compile app/infrastructure/docx/rule_pattern_extractor.py app/infrastructure/docx/specification_to_rules.py)",
+      "Bash(rtk pip *)",
+      "Bash(rtk grep *)",
+      "Bash(/c/Users/q1234/miniconda3/python.exe -m pip install sqlalchemy python-docx -q)",
+      "Bash(/c/Users/q1234/miniconda3/python.exe -c ' *)",
+      "Bash(/c/Users/q1234/miniconda3/python.exe -m pip install -r requirements.txt -q)",
+      "Bash(cmd *)",
+      "Bash(findstr /i \"docx\")",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api *)",
+      "Bash(rtk curl *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('content',''\\)\\)\")",
+      "Bash(rtk ls *)"
+    ]
+  }
+}

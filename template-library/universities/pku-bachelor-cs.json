@@ -1,0 +1,69 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "university": "北京大学",
+  "degree_type": "bachelor",
+  "discipline": "计算机科学",
+  "version": "1.0",
+  "is_active": true,
+  "file_path": "references/pku-bachelor-template.docx",
+  "created_at": "2026-04-28T00:00:00Z",
+  "updated_at": "2026-04-28T00:00:00Z",
+  "metadata": {
+    "author": "PaperNormAI Team",
+    "description": "北京大学本科毕业论文格式规范",
+    "tags": ["北京大学", "本科", "计算机科学"]
+  },
+  "rules": [
+    {
+      "id": "font_name_body",
+      "name": "正文字体",
+      "level": "L1",
+      "description": "正文应使用宋体",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": "宋体",
+        "allowed_fonts": ["宋体", "SimSun"]
+      }
+    },
+    {
+      "id": "font_size_body",
+      "name": "正文字号",
+      "level": "L1",
+      "description": "正文应使用五号字（10.5pt）",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": 10.5,
+        "unit": "pt"
+      }
+    },
+    {
+      "id": "line_spacing",
+      "name": "行距",
+      "level": "L1",
+      "description": "正文行距应为1.5倍",
+      "severity": "error",
+      "auto_fixable": true,
+      "params": {
+        "expected_value": 1.5,
+        "tolerance": 0.1
+      }
+    },
+    {
+      "id": "page_margin",
+      "name": "页边距",
+      "level": "L1",
+      "description": "页边距：上下2.54cm，左右2.5cm",
+      "severity": "error",
+      "auto_fixable": false,
+      "params": {
+        "top": 2.54,
+        "bottom": 2.54,
+        "left": 2.5,
+        "right": 2.5,
+        "unit": "cm"
+      }
+    }
+  ]
+}

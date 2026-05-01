@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PaperNormAI Template Schema",
+  "description": "JSON Schema for PaperNormAI university paper templates",
+  "type": "object",
+  "required": ["id", "university", "degree_type", "discipline", "version", "rules"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique template identifier"
+    },
+    "university": {
+      "type": "string",
+      "description": "University name"
+    },
+    "degree_type": {
+      "type": "string",
+      "enum": ["bachelor", "master", "doctor"],
+      "description": "Academic degree type"
+    },
+    "discipline": {
+      "type": "string",
+      "description": "Academic discipline or field of study"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "Template version in format X.Y"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Path to reference document file (optional)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rules": {
+      "type": "array",
+      "description": "Validation rules for this template",
+      "items": {
+        "$ref": "#/definitions/ValidationRule"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional template metadata",
+      "properties": {
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ValidationRule": {
+      "type": "object",
+      "required": ["id", "name", "level", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Rule identifier (e.g., 'font_name', 'line_spacing')"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable rule name"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["L1", "L2", "L3"],
+          "description": "Rule complexity level: L1=structural, L2=pattern-based, L3=AI-enhanced"
+        },
+        "description": {
+          "type": "string",
+          "description": "Rule description for UI display"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning", "info"],
+          "default": "error"
+        },
+        "auto_fixable": {
+          "type": "boolean",
+          "default": false
+        },
+        "params": {
+          "type": "object",
+          "description": "Rule-specific parameters",
+          "properties": {
+            "expected_value": { "type": "string" },
+            "tolerance": { "type": "number" },
+            "pattern": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
