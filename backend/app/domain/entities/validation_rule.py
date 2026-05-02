@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Dict, Any, Optional, UUID
+from typing import Callable, Dict, Any, Optional
+from uuid import UUID
 import uuid
 
 

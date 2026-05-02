@@ -50,6 +50,7 @@ class ElementProperties:
     font_bold: bool = False
     font_italic: bool = False
     line_spacing: Optional[float] = None
+    line_spacing_rule: Optional[str] = None  # 'multiple', 'fixed', 'at_least'
     paragraph_spacing_before: Optional[float] = None
     paragraph_spacing_after: Optional[float] = None
     alignment: Optional[str] = None
@@ -155,6 +156,7 @@ class DocumentParser:
             font_bold=self._is_bold(para),
             font_italic=self._is_italic(para),
             line_spacing=self._get_line_spacing(para),
+            line_spacing_rule=self._get_line_spacing_rule(para),
             paragraph_spacing_before=self._get_spacing_before(para),
             paragraph_spacing_after=self._get_spacing_after(para),
             alignment=self._get_alignment(para),
@@ -220,11 +222,62 @@ class DocumentParser:
         return False
 
     def _get_line_spacing(self, para: Paragraph) -> Optional[float]:
-        """Get line spacing as multiplier (e.g., 1.5)."""
-        if para.paragraph_format and para.paragraph_format.line_spacing:
-            value = para.paragraph_format.line_spacing
-            if value and value > 0:
-                return float(value)
+        """Get line spacing value (either multiplier or fixed pt value).
+
+        Returns:
+            - Multiplier value (e.g., 1.5) for MULTIPLE/ONE_POINT_FIVE spacing
+            - Fixed pt value (e.g., 23) for EXACTLY spacing
+            - None if no line spacing is set
+        """
+        # Check direct paragraph format first
+        if para.paragraph_format:
+            pf = para.paragraph_format
+            if pf.line_spacing is not None and pf.line_spacing > 0:
+                return float(pf.line_spacing)
+
+        # Fall back to style's paragraph format
+        if para.style and para.style.paragraph_format:
+            style_pf = para.style.paragraph_format
+            if style_pf.line_spacing is not None and style_pf.line_spacing > 0:
+                return float(style_pf.line_spacing)
+
+        return None
+
+    def _get_line_spacing_rule(self, para: Paragraph) -> Optional[str]:
+        """Get line spacing rule type.
+
+        Returns:
+            - 'multiple' for MULTIPLE, ONE_POINT_FIVE, SINGLE, DOUBLE
+            - 'fixed' for EXACTLY
+            - 'at_least' for AT_LEAST
+            - None if no rule is set
+        """
+        from docx.enum.text import WD_LINE_SPACING
+
+        # Check direct paragraph format first
+        if para.paragraph_format and para.paragraph_format.line_spacing_rule is not None:
+            rule = para.paragraph_format.line_spacing_rule
+            if rule == WD_LINE_SPACING.EXACTLY:
+                return 'fixed'
+            elif rule in (WD_LINE_SPACING.MULTIPLE, WD_LINE_SPACING.ONE_POINT_FIVE,
+                          WD_LINE_SPACING.SINGLE, WD_LINE_SPACING.DOUBLE):
+                return 'multiple'
+            elif rule == WD_LINE_SPACING.AT_LEAST:
+                return 'at_least'
+
+        # Fall back to style's paragraph format
+        if para.style and para.style.paragraph_format:
+            style_pf = para.style.paragraph_format
+            if style_pf.line_spacing_rule is not None:
+                rule = style_pf.line_spacing_rule
+                if rule == WD_LINE_SPACING.EXACTLY:
+                    return 'fixed'
+                elif rule in (WD_LINE_SPACING.MULTIPLE, WD_LINE_SPACING.ONE_POINT_FIVE,
+                              WD_LINE_SPACING.SINGLE, WD_LINE_SPACING.DOUBLE):
+                    return 'multiple'
+                elif rule == WD_LINE_SPACING.AT_LEAST:
+                    return 'at_least'
+
         return None
 
     def _get_spacing_before(self, para: Paragraph) -> Optional[float]:

@@ -1,6 +1,7 @@
 """TemplateService domain service."""
 
-from typing import List, Optional, UUID
+from typing import List, Optional
+from uuid import UUID
 from app.domain.entities.template import Template
 from app.domain.repositories import ITemplateRepository
 

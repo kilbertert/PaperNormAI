@@ -195,8 +195,14 @@ class RuleEngine:
         parsed_document: ParsedDocument,
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
-        """Check line spacing matches expected value."""
+        """Check line spacing matches expected value.
+
+        Handles both:
+        - 'fixed' mode: exact pt value (e.g., 23pt)
+        - 'multiple' mode: multiplier (e.g., 1.5x)
+        """
         expected_spacing = rule.params.get("expected_value")
+        expected_rule = rule.params.get("line_spacing_type")  # 'fixed' or 'multiple'
         tolerance = rule.params.get("tolerance", 0.1)
 
         if expected_spacing is None:
@@ -207,14 +213,32 @@ class RuleEngine:
                 continue
             if element.properties.line_spacing is not None:
                 actual_spacing = element.properties.line_spacing
+                actual_rule = element.properties.line_spacing_rule
+
+                # First check if the rule type matches
+                if expected_rule and actual_rule:
+                    if expected_rule != actual_rule:
+                        return ValidationResult(
+                            rule_id=rule.id,
+                            rule_name=rule.name,
+                            element_path=element.path,
+                            expected_value=f"{expected_spacing}pt ({expected_rule})",
+                            actual_value=f"{actual_spacing}pt ({actual_rule})",
+                            message=f"Line spacing type mismatch: expected {expected_rule} but found {actual_rule}",
+                            severity=Severity(rule.severity.value),
+                            auto_fixable=rule.auto_fixable,
+                            ai_enhanced=False,
+                        )
+
+                # Then check the value (with tolerance for pt values)
                 if abs(actual_spacing - expected_spacing) > tolerance:
                     return ValidationResult(
                         rule_id=rule.id,
                         rule_name=rule.name,
                         element_path=element.path,
-                        expected_value=f"{expected_spacing}x",
-                        actual_value=f"{actual_spacing}x",
-                        message=f"Expected line spacing {expected_spacing}x but found {actual_spacing}x",
+                        expected_value=f"{expected_spacing}pt",
+                        actual_value=f"{actual_spacing}pt",
+                        message=f"Expected line spacing {expected_spacing}pt but found {actual_spacing}pt",
                         severity=Severity(rule.severity.value),
                         auto_fixable=rule.auto_fixable,
                         ai_enhanced=False,

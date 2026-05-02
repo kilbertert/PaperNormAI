@@ -20,7 +20,10 @@
       "Bash(gh api *)",
       "Bash(rtk curl *)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('content',''\\)\\)\")",
-      "Bash(rtk ls *)"
+      "Bash(rtk ls *)",
+      "Bash(rtk git *)",
+      "Bash(rtk read *)",
+      "Bash(git checkout *)"
     ]
   }
 }

@@ -5,7 +5,8 @@ This follows the Dependency Inversion Principle: Domain defines interfaces,
 Infrastructure implements them.
 """
 
-from typing import Protocol, Optional, List, UUID
+from typing import Protocol, Optional, List
+from uuid import UUID
 from app.domain.entities.document import Document
 from app.domain.entities.template import Template
 

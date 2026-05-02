@@ -1,7 +1,7 @@
 """API routes package."""
 
 from fastapi import APIRouter
-from app.api.endpoints import documents, templates, validations, corrections, auth
+from app.api.endpoints import documents, templates, validations, corrections, auth, spec_validation
 
 api_router = APIRouter()
 
@@ -10,3 +10,4 @@ api_router.include_router(documents.router, prefix="/documents", tags=["document
 api_router.include_router(templates.router, prefix="/templates", tags=["templates"])
 api_router.include_router(validations.router, prefix="/validations", tags=["validations"])
 api_router.include_router(corrections.router, prefix="/corrections", tags=["corrections"])
+api_router.include_router(spec_validation.router, prefix="/spec", tags=["spec-validation"])
