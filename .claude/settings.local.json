@@ -23,7 +23,8 @@
       "Bash(rtk ls *)",
       "Bash(rtk git *)",
       "Bash(rtk read *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(dir \"D:\\\\AI\\\\project\\\\PaperNormAI\\\\handoff\\\\\" 2>/dev/null)"
     ]
   }
 }

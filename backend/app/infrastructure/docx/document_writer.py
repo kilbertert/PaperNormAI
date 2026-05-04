@@ -228,15 +228,8 @@ class DocumentWriter:
                     run.font.size = docx.shared.Pt(properties.font_size)
 
         if properties.line_spacing is not None:
-            if properties.line_spacing_rule == 'fixed':
-                # For fixed line spacing, skip for now - requires XML manipulation
-                # to set line spacing in twips correctly
-                pass
-            elif properties.line_spacing_rule == 'multiple':
-                para.paragraph_format.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
-                para.paragraph_format.line_spacing = properties.line_spacing
-            else:
-                para.paragraph_format.line_spacing = properties.line_spacing
+            # Skip fixed line spacing for now - requires XML manipulation
+            pass
 
         if properties.paragraph_spacing_before is not None:
             para.paragraph_format.space_before = int(properties.paragraph_spacing_before)

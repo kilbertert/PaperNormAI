@@ -23,29 +23,34 @@
 
 截至当前版本：
 
-- 当前已明确的是能力蓝图，而不是能力实现现状。
-- 当前 MVP 核心能力围绕 `.docx` 检测与修正闭环展开。
-- 当前多端能力（桌面端、Word 插件）已明确后置。
-- 当前知识库自身也可以视为一种“AI 协作能力建设”，但它服务于产品开发，不属于终端用户产品能力。
+- 架构已发生重大变更（2026-05-03）：规则来源从”系统预置模板”改为”用户上传规范手册 AI 提取”
+- 当前 MVP 分两个阶段：Phase 1（基础文本格式）、Phase 2（公式/表格/插图）
+- 关键技改：docling 替代 python-docx，AI-Word-Skill 实现只改文字保留排版
+- 当前多端能力（桌面端、Word 插件）已明确后置
+- 模板系统从核心降级为 Fallback 机制
 
 ## 4. 能力分类
 
 ### 4.1 用户侧产品能力
 
-1. 文档接入能力
-2. 模板选择能力
-3. 格式检测能力
-4. 报告呈现能力
-5. 自动修正能力
-6. 修正结果交付能力
+1. **规范手册上传能力** — 用户上传自己的格式规范手册（spec_doc）
+2. **论文文档上传能力** — 用户上传毕业设计论文（thesis_doc）
+3. **模板选择能力** — 用户未上传规范手册时，选择系统预置模板（Fallback）
+4. **规则提取能力** — AI 从规范手册中语义理解提取规则
+5. **格式检测能力** — AI 基于提取的规则对论文进行语义校验
+6. **报告呈现能力** — Git-diff 风格展示检测结果（原始内容 vs 修正后内容）
+7. **用户编辑能力** — 用户在确认前可手动编辑修正内容
+8. **修正合并能力** — AI-Word-Skill 实现只改文字保留排版
+9. **修正结果交付能力** — 用户确认后生成并下载 corrected.docx
 
 ### 4.2 系统侧基础能力
 
-1. 中间文档模型能力
-2. 规则引擎能力
-3. 模板系统能力
-4. AI 增强判断能力
-5. 异步任务能力
+1. **Docling 文档解析能力** — 使用 docling 统一解析 spec_doc 和 thesis_doc
+2. **AI 语义规则提取能力** — AI 将规范手册内容提取为抽象描述性规则
+3. **AI 语义校验能力** — AI 基于语义规则对论文进行校验
+4. **规则持久化能力** — 用户级别规则存储，支持后续复用
+5. **AI-Word-Skill 合并能力** — 只改文字，保留原始 Word 排版
+6. **异步任务能力** — 文档处理和 AI 调用的异步执行
 
 ### 4.3 工程协作能力
 
@@ -55,32 +60,51 @@
 4. 技能化执行能力
 5. 文档导航与日志审计能力
 
-## 5. MVP 核心能力地图
+## 5. MVP 能力地图（Phase 1 & Phase 2）
 
-| 能力 | 类型 | MVP 优先级 | 当前状态 | 目标落点模块 |
-|---|---|---|---|---|
-| `.docx` 上传 | 用户侧产品能力 | 高 | 蓝图已定义，未落代码 | `clients/apps/web/`、`backend/app/api/` |
-| 文档解析为中间模型 | 系统侧基础能力 | 高 | 蓝图已定义，未落代码 | `backend/app/infrastructure/docx/`、`backend/app/domain/document/` |
-| 模板选择 | 用户侧产品能力 | 高 | 蓝图已定义，未落代码 | `clients/apps/web/`、`backend/app/domain/template/` |
-| 模板规则加载 | 系统侧基础能力 | 高 | 蓝图已定义，未落代码 | `backend/app/domain/template/`、`backend/app/domain/validation/` |
-| 确定性格式检测 | 用户侧产品能力 | 高 | 蓝图已定义，未落代码 | `backend/app/domain/validation/` |
-| 检测报告生成 | 用户侧产品能力 | 高 | 蓝图已定义，未落代码 | `backend/app/domain/validation/`、`backend/app/api/` |
-| 自动修正可修正问题 | 用户侧产品能力 | 高 | 蓝图已定义，未落代码 | `backend/app/domain/correction/`、`backend/app/infrastructure/docx/` |
-| 修正后文档下载 | 用户侧产品能力 | 高 | 蓝图已定义，未落代码 | `backend/app/api/`、`clients/apps/web/` |
-| AI 参考文献增强检查 | 系统侧基础能力 | 中 | 蓝图已定义，未落代码 | `backend/app/infrastructure/ai/`、`backend/app/domain/validation/` |
-| 异步 job 执行 | 系统侧基础能力 | 高 | 蓝图已定义，未落代码 | `backend/app/application/` |
+### 5.1 Phase 1（当前实施）
+
+| 能力 | 类型 | 当前状态 | 目标落点模块 |
+|---|---|---|---|
+| 规范手册上传 | 用户侧产品能力 | 蓝图已定义，未落代码 | `backend/app/api/`、`clients/apps/web/` |
+| 论文文档上传 | 用户侧产品能力 | 蓝图已定义，未落代码 | `backend/app/api/`、`clients/apps/web/` |
+| 模板选择（Fallback） | 用户侧产品能力 | 蓝图已定义，未落代码 | `clients/apps/web/`、`backend/app/domain/template/` |
+| docling 文档解析 | 系统侧基础能力 | 蓝图已定义，未落代码 | `backend/app/infrastructure/docling/` |
+| AI 语义规则提取 | 系统侧基础能力 | 蓝图已定义，未落代码 | `backend/app/domain/rules/`、`backend/app/infrastructure/ai/` |
+| 规则持久化 | 系统侧基础能力 | 蓝图已定义，未落代码 | `backend/app/infrastructure/persistence/` |
+| AI 语义校验（文本格式） | 系统侧基础能力 | 蓝图已定义，未落代码 | `backend/app/domain/validation/`、`backend/app/infrastructure/ai/` |
+| Git-diff 报告展示 | 用户侧产品能力 | 蓝图已定义，未落代码 | `backend/app/api/`、`clients/apps/web/` |
+| 用户手动编辑 | 用户侧产品能力 | 蓝图已定义，未落代码 | `clients/apps/web/` |
+| AI-Word-Skill 合并 | 系统侧基础能力 | 蓝图已定义，未落代码 | `backend/app/infrastructure/docx/` |
+| 修正后文档下载 | 用户侧产品能力 | 蓝图已定义，未落代码 | `backend/app/api/`、`clients/apps/web/` |
+| 异步 job 执行 | 系统侧基础能力 | 蓝图已定义，未落代码 | `backend/app/application/` |
+
+**Phase 1 覆盖的格式问题：** 字体、字号、行距、段前段后、标题层级、页边距
+
+### 5.2 Phase 2（后续实施）
+
+| 能力 | 类型 | 当前状态 | 后置原因 |
+|---|---|---|---|
+| 公式格式检测与修正 | 用户侧产品能力 | 蓝图已定义 | Phase 1 完成后实施 |
+| 表格格式检测与修正 | 用户侧产品能力 | 蓝图已定义 | Phase 1 完成后实施 |
+| 插图格式检测与修正 | 用户侧产品能力 | 蓝图已定义 | Phase 1 完成后实施 |
+| 参考文献格式检测 | 用户侧产品能力 | 蓝图已定义 | Phase 1 完成后实施 |
+| 引用一致性检测 | 用户侧产品能力 | 蓝图已定义 | Phase 1 完成后实施 |
 
 ## 6. 明确后置的能力地图
 
 | 能力 | 当前状态 | 后置原因 |
 |---|---|---|
-| 桌面客户端 | 不进入当前 MVP | 先验证核心引擎闭环 |
+| 桌面客户端 | 不进入当前 MVP | 先验证 Web 主链路 |
 | Word 插件 | 不进入当前 MVP | 先验证 Web 主链路 |
 | PDF 自动修正 | 不进入当前 MVP | 文档结构复杂度高 |
 | LaTeX 支持 | 不进入当前 MVP | 超出当前场景收敛范围 |
 | 多租户组织空间 | 不进入当前 MVP | 当前重点不是协作平台 |
 | 复杂后台管理 | 不进入当前 MVP | 当前重点不是运营后台 |
 | 团队协作与审批流 | 不进入当前 MVP | 当前重点是单用户工具闭环 |
+| 公式/表格/插图格式检测与修正 | Phase 2 | Phase 1 完成后实施 |
+| 参考文献格式检测 | Phase 2 | Phase 1 完成后实施 |
+| 引用一致性检测 | Phase 2 | Phase 1 完成后实施 |
 
 ## 7. AI 工程协作能力地图
 
@@ -117,22 +141,29 @@
 
 ## 10. 待确认问题
 
-1. MVP 首批高校模板支持范围会如何收敛。
-2. AI 增强能力是否会在 MVP 第一批就上线，还是后移到后续阶段。
-3. 异步任务状态获取会优先采用轮询还是预留 WebSocket。
-4. 后续是否需要单独拆出“模板系统能力地图”和“规则能力地图”。
+1. Phase 1 具体落地顺序（是先做 docling 集成还是先做 AI 校验流程）
+2. AI 语义规则的具体 prompt 设计
+3. ValidationReport 的具体数据结构
+4. 用户手动编辑的交互设计
+5. Phase 2 的优先级排序（公式 vs 表格 vs 插图）
 
 ## 11. 更新记录
 
-**最近复核时间**：2026-04-28
+**最近复核时间**：2026-05-03
 
 **复核依据**：
-- 代码范围：当前仓库结构与 AI 协作文档
+- 与项目负责人确认的业务流程（2026-05-03）
 - 参考文档：
-  - `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
-  - `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
-  - `README.md`
+  - `论文规范.md`
+  - AI-Word-Skill 项目：https://github.com/sgsss998/AI-Word-Skill.git
+  - docling 项目：https://github.com/docling-project/docling.git
+
+**重要架构变更（2026-05-03）：**
+
+1. 规则来源从”系统预置模板”改为”用户上传规范手册 AI 提取”
+2. 文档解析从 `python-docx` 改为 `docling`
+3. 新增 AI-Word-Skill 用于修正合并
+4. 模板系统降级为 Fallback 机制
+5. MVP 分为 Phase 1（文本格式）和 Phase 2（公式/表格/插图）
 
 **当前可信度**：高
-
-**待确认点**：多数产品能力仍处于蓝图态，尚未落入业务代码。
