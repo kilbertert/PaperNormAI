@@ -24,7 +24,9 @@
       "Bash(rtk git *)",
       "Bash(rtk read *)",
       "Bash(git checkout *)",
-      "Bash(dir \"D:\\\\AI\\\\project\\\\PaperNormAI\\\\handoff\\\\\" 2>/dev/null)"
+      "Bash(dir \"D:\\\\AI\\\\project\\\\PaperNormAI\\\\handoff\\\\\" 2>/dev/null)",
+      "Bash(rtk gain *)",
+      "Bash(python -c \"import docling; print\\(docling.__version__\\)\")"
     ]
   }
 }

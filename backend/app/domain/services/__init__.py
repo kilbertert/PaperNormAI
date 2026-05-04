@@ -7,5 +7,6 @@ Domain services orchestrate entities and use repository interfaces.
 from app.domain.services.rule_engine import RuleEngine
 from app.domain.services.template_service import TemplateService
 from app.domain.services.correction_executor import CorrectionExecutor
+from app.domain.services.correction_service import CorrectionService
 
-__all__ = ["RuleEngine", "TemplateService", "CorrectionExecutor"]
+__all__ = ["RuleEngine", "TemplateService", "CorrectionExecutor", "CorrectionService"]

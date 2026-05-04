@@ -1,85 +1,82 @@
 ## 当前阶段
 
-**Active Step:** Step 0 已完成 — 等待下一步指令
+**Active Step:** Phase 1 完成 — MVP 核心链路已就绪
 **Status:** COMPLETED
 **Started:** 2026-05-03
+**Completed:** 2026-05-05
 
 ---
 
-## 进行中
+## Phase 1 完成总结
 
-| 模块 | 做什么 | 谁 | 卡点 |
-|------|--------|-----|------|
-| [无] | 等待下一步指令 | - | - |
+### 完成内容
+
+| 步骤 | 状态 | 日期 |
+|------|------|------|
+| Step 1 — Docling 集成 | ✅ 完成 | 2026-05-03 |
+| Step 2 — AI 语义规则提取与校验 | ✅ 完成 | 2026-05-05 |
+| Step 3 — AI-Word-Skill 文档修正合并 | ✅ 完成 | 2026-05-05 |
+
+### 核心链路
+
+```text
+用户上传 spec_doc + thesis_doc
+  → docling 解析 → DocumentModel
+  → AI 提取规则（RuleExtractionService）
+  → AI 语义校验（SemanticValidationService）→ ValidationReport
+  → Git-diff 风格展示
+  → 用户手动编辑/确认
+  → AI-Word-Skill 合并（CorrectionService + DocumentMerger）
+  → 输出 corrected.docx
+```
+
+### 技术栈
+
+| 组件 | 实现 |
+|------|------|
+| 文档解析 | docling |
+| 规则提取 | AI 语义理解（OpenAI） |
+| 规则形态 | 抽象描述性规则 |
+| 校验方式 | AI 语义校验 |
+| 文档合并 | AI-Word-Skill（fallback: python-docx） |
+
+---
+
+## 已知待办（Known Gaps）
+
+| 编号 | 描述 | 优先级 |
+|------|------|--------|
+| KG-1 | Docling DOCX 解析保真度验证 | 中 |
+| KG-2 | DocumentUseCases 接入 DoclingDocumentParser | 高 |
+| KG-3 | 长文档处理（>200段落）| 中 |
+| KG-4 | 规则和 ValidationReport 持久化 | 高 |
+| KG-5 | AI-Word-Skill API 实际可用性验证 | 高 |
+| KG-6 | Phase 2（公式/表格/插图） | 低 |
 
 ---
 
 ## 下一步
 
-1. 更新 100-system-overview.md — 反映新架构（docling + spec_doc/thesis_doc 分离）
-2. 更新 700-capability-map.md — 明确 MVP Phase 1 & 2 划分
-3. 创建架构决策记录 — 记录关键技术选型
-4. 触发 /checkpoint 存档
+1. **KG-5**: 验证 AI-Word-Skill 可用性
+2. **KG-2**: 将 DoclingDocumentParser 接入应用层
+3. **KG-4**: 实现持久化
+4. 端到端集成测试
 
 ---
 
-## 卡点
-
-- [无]
+*最近更新: 2026-05-05*
 
 ---
 
-## 重大架构变更（2026-05-03）
+## Step 1 完成
 
-### 原理解 → 新理解
-
-**原 MVP 架构：**
-用户上传 thesis_doc → 选择系统预置模板 → 基于模板规则检测
-
-**新架构：**
-```
-用户上传两份文档（可同时，可分开）：
-  ├── spec_doc (规范手册) ──→ docling 解析 ──→ AI 语义提取规则
-  └── thesis_doc (论文)    ──→ docling 解析
-                                    ↓
-                          AI 语义校验 ──→ ValidationReport (diff 展示)
-                                    ↓
-                          用户手动编辑校正
-                                    ↓
-                          AI-Word-Skill 合并回 .docx（只改文字，保留排版）
-
-Fallback：用户未上传 spec_doc → 使用系统内置规则（论文规范.md）
-```
-
-### 关键技术选型
-
-| 组件 | 选型 | 理由 |
-|------|------|------|
-| 文档解析 | docling | 开源成熟，结构化输出能力强 |
-| 规则提取 | AI 语义理解 | 规范文档无法结构化规则化提取 |
-| 规则形态 | 抽象描述性规则 | 结构化规则无法覆盖全部规范内容 |
-| 文档合并 | AI-Word-Skill | "只改文字，保留排版"完美契合需求 |
-| 校验方式 | AI 语义校验 | 而非规则引擎比对 |
-
-### MVP 分批规划
-
-| 阶段 | 覆盖内容 |
-|------|---------|
-| **Phase 1** | 字体、字号、段落、页边距等基础文本格式 |
-| **Phase 2** | 公式、表格、插图格式检测与修正 |
+| 项目 | 状态 |
+|------|------|
+| Docling 集成 | ✅ Richard 确认通过 |
+| 3 Must Fix | ✅ 全部修复 |
+| DocumentModel | ✅ 定义完整 |
+| 单元测试 | ✅ 已创建 |
 
 ---
 
-## 最近完成
-
-- **架构理解同步** — 2026-05-03 — 确认 spec_doc/thesis_doc 分离流程、docling + AI-Word-Skill 集成、MVP 分批规划
-
----
-
-## 待决策
-
-- [无]
-
----
-
-*最近更新: 2026-05-03*
+*最近更新: 2026-05-05*

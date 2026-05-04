@@ -40,6 +40,15 @@
 
 ### 4.1 先读什么
 
+#### 如果你要理解 PaperNormAI 的产品与工程架构（2026-05-03 更新）
+
+按顺序阅读：
+
+1. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` — 系统总览（架构已更新）
+2. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` — 功能能力地图（Phase 1 & 2）
+3. `docs/architecture/adr-001-005-architecture-decisions.md` — 关键架构决策
+4. `docs/design/validation-report-datamodel.md` — ValidationReport 数据结构设计
+
 #### 如果你要理解 AI 协作规则
 
 按顺序阅读：
@@ -48,21 +57,14 @@
 2. `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
 3. `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
 
-#### 如果你要理解 PaperNormAI 的产品与工程架构
+#### 如果你要进行功能开发
 
 按顺序阅读：
 
-1. `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
-2. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
-3. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
-
-#### 如果你要理解知识库如何使用和维护
-
-按顺序阅读：
-
-1. `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`
-2. `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
-3. `docs/knowledge/PaperNormAI-knowledge/900-learning-log.md`
+1. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
+2. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
+3. `docs/architecture/adr-001-005-architecture-decisions.md`
+4. 对应的 design 文档（如 `validation-report-datamodel.md`）
 
 ### 4.2 当前知识文档地图
 
@@ -71,15 +73,17 @@
 | `.github/copilot-instructions.md` | AI 工程治理规则 | 已存在 | 所有 agent / skill |
 | `docs/architecture/2026-04-28-mvp-engineering-blueprint.md` | MVP 工程架构 | 已存在 | 架构阅读、开发前置 |
 | `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md` | AI 协作体系蓝图 | 已存在 | agent / skill 设计 |
+| `docs/architecture/adr-001-005-architecture-decisions.md` | 关键架构决策（2026-05-03） | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md` | 知识治理规范 | 已存在 | knowledge-builder、维护者 |
 | `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md` | 知识导航总入口 | 已存在 | 所有 agent / skill |
-| `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` | 系统总览 | 已存在 | knowledge-builder、开发前置 |
+| `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` | 系统总览（2026-05-03 更新） | 已存在 | knowledge-builder、开发前置 |
+| `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` | 功能能力地图（2026-05-03 更新） | 已存在 | 产品理解、开发前置 |
+| `docs/design/validation-report-datamodel.md` | ValidationReport 数据结构设计 | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/200-database-models.md` | 数据库模型蓝图 | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/300-backend-kernel-services.md` | 后端核心服务蓝图 | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/400-api-architecture.md` | API 架构蓝图 | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/500-frontend-architecture.md` | 前端架构蓝图 | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/600-domain-models.md` | 领域模型蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` | 功能能力地图 | 已存在 | 产品理解、开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/800-cross-layer-call-chains.md` | 跨层调用链蓝图 | 已存在 | 开发前置 |
 | `docs/knowledge/PaperNormAI-knowledge/900-learning-log.md` | 学习日志 | 已存在 | knowledge-builder |
 
