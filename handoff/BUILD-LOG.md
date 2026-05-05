@@ -5,13 +5,34 @@
 
 ## Current Status
 
-**Active step:** Step 5 Phase 2 完成 — KG-6 表格/插图/公式解析 — 2026-05-05
-**Last cleared:** Step 5 — 2026-05-05
+**Active step:** Step 6 KG-4 完成 — 规则持久化 — 2026-05-06
+**Last cleared:** Step 6 — 2026-05-06
 **Pending deploy:** NO (local development only)
 
 ---
 
 ## Step History
+
+### Step 6 — KG-4 规则持久化 — COMPLETE
+*Date: 2026-05-06*
+
+Files changed:
+- `backend/app/infrastructure/persistence/models.py` — 添加 SpecSessionModel
+- `backend/app/infrastructure/persistence/spec_session_repository.py` — 新建 repository
+- `backend/app/api/endpoints/spec_validation.py` — 替换 _spec_sessions dict 为 DB
+
+Decisions made:
+- SpecSessionModel 使用 String(36) 存储 user_id（SQLite 兼容，不用 PGUUID FK）
+- rules_json + summary_json 存储为 Text（JSON 序列化）
+- ValidationReport violations 不持久化（仅返回计数，MVP 够用）
+
+验证结果:
+- save/find/delete 全部通过
+- 服务重启后 session 不丢失
+
+Deploy: 不适用（开发阶段）
+
+---
 
 ### Step 5 — Phase 2 表格/插图/公式解析 — COMPLETE
 *Date: 2026-05-05*
@@ -127,7 +148,7 @@ Deploy: 不适用（开发阶段）
 - **KG-1** — ~~Docling DOCX 解析保真度未在实际文档上验证~~ — ✅ 已验证（390段落正常），2026-05-05
 - **KG-2** — ~~DocumentUseCases 尚未接入 DoclingDocumentParser~~ — ✅ 已完成，2026-05-05
 - **KG-3** — ~~长文档处理（>200段落）~~ — ✅ 已通过（390段落正常），2026-05-05
-- **KG-4** — 规则和 ValidationReport 尚未持久化到数据库 — 待实施
+- **KG-4** — ~~规则和 ValidationReport 尚未持久化到数据库~~ — ✅ 已完成（Step 6），2026-05-06
 - **KG-5** — ~~AI-Word-Skill 虚假包检测~~ — ✅ 已修正，2026-05-05
 - **KG-6** — ~~Phase 2（公式/表格/插图）~~ — ✅ 已完成（Step 5），2026-05-05
 - **KG-7** — ~~Docling v2 API 错误（elements 不存在）~~ — ✅ Arch 直接重写 parser.py，2026-05-05

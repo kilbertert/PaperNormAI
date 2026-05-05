@@ -163,6 +163,21 @@ class CorrectionJobModel(Base):
         return f"<CorrectionJobModel {self.id} status={self.status}>"
 
 
+class SpecSessionModel(Base):
+    """Spec session database model — persists AI-extracted rules."""
+
+    __tablename__ = "spec_sessions"
+
+    session_id = Column(String(32), primary_key=True)
+    user_id = Column(String(36), nullable=False, index=True)  # UUID as string for SQLite compat
+    rules_json = Column(Text, nullable=False, default="[]")
+    summary_json = Column(Text, nullable=False, default="{}")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<SpecSessionModel {self.session_id}>"
+
+
 class AuditLogModel(Base):
     """Audit log database model."""
 

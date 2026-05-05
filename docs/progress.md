@@ -5,10 +5,10 @@
 
 ## 当前阶段
 
-**Active Step:** KG-6 Phase 2 完成 — 2026-05-05
-**Status:** Phase 1 ✅ | Phase 2 表格/插图/公式解析 ✅
+**Active Step:** KG-4 规则持久化完成 — 2026-05-06
+**Status:** Phase 1 ✅ | Phase 2 ✅ | KG-4 持久化 ✅
 **Started:** 2026-05-03
-**Last Updated:** 2026-05-05
+**Last Updated:** 2026-05-06
 
 ---
 
@@ -65,14 +65,14 @@
 
 ---
 
-## KG 状态（2026-05-05 更新）
+## KG 状态（2026-05-06 更新）
 
 | 编号 | 描述 | 优先级 | 状态 |
 |------|------|--------|------|
 | KG-1 | Docling DOCX 解析保真度验证 | 中 | ✅ 已验证（390段落正常） |
 | KG-2 | DocumentUseCases 接入 DoclingDocumentParser | 高 | ✅ 已完成 |
 | KG-3 | 长文档处理（>200段落）| 中 | ✅ 已通过（390段落正常） |
-| KG-4 | 规则和 ValidationReport 持久化 | 高 | 待实施 |
+| KG-4 | ~~规则和 ValidationReport 持久化~~ | ~~高~~ | ✅ 已完成（SpecSessionModel + DB） |
 | KG-5 | ~~AI-Word-Skill 包检测~~ | ~~高~~ | ✅ 已完成 |
 | KG-6 | ~~Phase 2（公式/表格/插图）~~ | ~~低~~ | ✅ 已完成 |
 | KG-7 | ~~Docling v2 API 解析修复~~ | ~~高~~ | ✅ 已修复 |
