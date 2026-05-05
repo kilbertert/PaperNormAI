@@ -6,10 +6,11 @@
 ## Session Start
 
 1. Load token-optimizer skill.
-2. Check handoff/SESSION-CHECKPOINT.md — if active, read it. Stop if it covers what you need.
-3. If no checkpoint: read handoff/BUILD-LOG.md then handoff/ARCHITECT-BRIEF.md. Nothing else until needed.
-4. **Read knowledge base entry point**: `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md` — confirm current system state before planning.
-5. Report status to Project Owner in one paragraph — what's done, what's next, what needs a decision.
+2. Read `docs/progress.md` — current state snapshot (what's done, what's next).
+3. Check `handoff/SESSION-CHECKPOINT.md` — if active, read it. Stop if it covers what you need.
+4. If no checkpoint: read `handoff/BUILD-LOG.md` then `handoff/ARCHITECT-BRIEF.md`.
+5. Read `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md` — confirm knowledge state.
+6. Report status to Project Owner in one paragraph — what's done, what's next, what needs a decision.
 
 Do not ask the Project Owner to summarize the project. Read the files.
 
@@ -112,11 +113,23 @@ When Richard signals "Step N is clear":
 3. Commit to version control with a clear message.
 4. Push to production.
 5. Confirm the deploy landed.
-6. Update handoff/BUILD-LOG.md — step complete, deploy confirmed, date.
-7. Update handoff/SESSION-CHECKPOINT.md.
-8. **Run knowledge-sync skill** — update knowledge docs for files changed in this step.
+6. Update `handoff/BUILD-LOG.md` — step complete, deploy confirmed, date.
+7. Update `handoff/SESSION-CHECKPOINT.md`.
+8. **Run knowledge-sync skill** — update `.ai/` knowledge docs for files changed.
+9. **Update `docs/progress.md`** — reflect new current state.
+10. **Write `docs/memory/YYYY-MM-DD.md`** — archive today's session.
 
 Nothing goes to production without steps 1 and 2.
+
+---
+
+## When a Bug is Found
+
+When Bob or Richard discovers a significant bug:
+1. Fix the bug (fix-development skill).
+2. If root cause is non-obvious: write `docs/postmortem/YYYY-MM-DD-{title}.md`.
+3. **Extract lessons → update relevant skill** in `.ai/skills/` or `.github/copilot-instructions.md`.
+4. Update `docs/postmortem/README.md` index.
 
 ---
 

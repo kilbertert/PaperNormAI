@@ -23,34 +23,25 @@ Step 1. 读取 handoff/BUILD-LOG.md 最新完成的 Step
   - 获取 files_changed 列表
   - 获取 decisions_made 列表
 
-Step 2. 映射到知识文档
-  根据 files_changed 确定需要更新的知识文档：
-  - backend/app/infrastructure/docling/     → 300-backend-kernel-services.md
-  - backend/app/infrastructure/persistence/ → 200-database-models.md
-  - backend/app/domain/services/            → 300-backend-kernel-services.md
-  - backend/app/domain/entities/            → 600-domain-models.md
-  - backend/app/api/endpoints/              → 400-api-architecture.md
-  - backend/app/infrastructure/ai/          → 300-backend-kernel-services.md
-  - clients/                                → 500-frontend-architecture.md
+Step 2. 映射到知识文档（见文件映射速查表）
 
 Step 3. 更新对应知识文档
-  对每个需要更新的知识文档：
   - 将"蓝图已定义，未落代码"改为"✅ 已实现"
   - 添加实际实现的类名、方法名、文件路径
-  - 更新"当前可信度"和"最近复核时间"
+  - 更新"最近复核时间"
 
-Step 4. 写入 900-learning-log.md
-  追加一条增量学习记录，格式：
-  ## YYYY-MM-DD - {step_name} 知识同步
-  **触发原因**：Step 完成后自动同步
-  **更新了哪些知识文档**：{列表}
-  **新确认的事实**：{关键事实}
+Step 4. 更新 docs/progress.md
+  - 反映最新完成状态
+  - 更新"下一步"
 
-Step 5. 写入 910-skill-run-log.md
-  追加一条 skill 运行记录
+Step 5. 写入 docs/memory/YYYY-MM-DD.md
+  - 追加今日工作存档（如当日已有文件则追加，否则新建）
 
-Step 6. 更新 000-doc-map.md 中对应文档的状态
-  将"需更新"改为最新状态
+Step 6. 写入 docs/knowledge/PaperNormAI-knowledge/900-learning-log.md
+  - 追加增量学习记录
+
+Step 7. 写入 docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md
+  - 追加 skill 运行记录
 ```
 
 ## 输出格式

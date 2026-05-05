@@ -138,39 +138,39 @@
 1. 知识文档（200-800 系列）何时系统更新为代码事实态（通过 knowledge-sync skill 逐步完成）。
 2. 前端开发何时启动。
 
-## 9. 更新记录
+## 10. 三套基础设施闭环
 
 ```
-三人协作框架 (handoff/)          外部工程系统 (.ai/)
-─────────────────────────────────────────────────────
-Arch Session Start
-  → 读 BUILD-LOG.md              → 读 000-doc-map.md（本文件）
-  → 写 ARCHITECT-BRIEF.md        ← 知识库提供系统状态
+Session 开始
+  → 读 docs/progress.md（当前状态）
+  → 读 handoff/BUILD-LOG.md（执行历史）
+  → 读 .ai/000-doc-map.md（知识状态）
 
-Bob 开发
-  → 读 ARCHITECT-BRIEF.md        → 读对应专题文档（200-800）
-                                  → 运行 feature-readiness skill
-                                  → 运行 feature-development skill
+开发执行
+  → handoff/ 追踪（Arch→Bob→Richard）
+  → .ai/ 知识库指导（专题文档 + skills）
 
-Richard 审核
-  → 读 REVIEW-REQUEST.md
-  → 写 REVIEW-FEEDBACK.md
+Step 完成（Deploy Gate）
+  → knowledge-sync skill
+      ├─ 更新 .ai/ 专题文档（200-800）
+      ├─ 更新 docs/progress.md
+      └─ 写入 docs/memory/YYYY-MM-DD.md
 
-Arch Deploy Gate
-  → 更新 BUILD-LOG.md            → 运行 knowledge-sync skill
-                                  → 更新知识文档（200-800）
-                                  → 写入 910-skill-run-log.md
+Bug 发现
+  → docs/postmortem/ 写入
+  → 教训回写 .ai/skills/ 或 copilot-instructions.md
+
+下次 Session
+  → 读 docs/progress.md（循环）
 ```
 
-**知识库自动更新触发点：** Arch 在 Deploy Gate 完成后，运行 `.ai/skills/knowledge-sync.md`。
-
-## 9. 更新记录
+## 11. 更新记录
 
 **最近复核时间**：2026-05-06
 
 **重要变更（2026-05-06）：**
-- 业务代码已系统落地，更新核心事实
-- 添加两套系统协作关系图
-- knowledge-sync skill 作为自动更新触发点
+- 添加三套基础设施闭环图
+- knowledge-sync skill 同时更新 progress.md 和 memory/
+- postmortem 教训回写 .ai/skills/
 
 **当前可信度**：高

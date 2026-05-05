@@ -78,12 +78,21 @@
 ## 与其他文件的关系
 
 ```
-SESSION-CHECKPOINT.md  ← 单次会话存档（handoff/）
-BUILD-LOG.md           ← 步骤维度的构建历史（handoff/）
-progress.md            ← 当前快照（docs/）
-memory/                ← 每日存档（docs/memory/）
-postmortem/            ← 踩坑复盘（docs/postmortem/）
+三套基础设施闭环：
+
+handoff/                    .ai/                      docs/
+─────────────────────────────────────────────────────────────
+SESSION-CHECKPOINT.md  ←→  000-doc-map.md        ←→  progress.md
+BUILD-LOG.md           ──→ knowledge-sync skill   ──→ memory/YYYY-MM-DD.md
+ARCHITECT-BRIEF.md     ←── 专题文档（200-800）
+REVIEW-FEEDBACK.md     ──→ postmortem/            ──→ skills/ 教训回写
 ```
+
+**数据流向：**
+- `progress.md` → Arch Session Start 读取（当前状态入口）
+- `BUILD-LOG.md` 完成 → `knowledge-sync` → 更新 `.ai/` + `progress.md` + `memory/`
+- `postmortem/` 写入 → 教训回写 `.ai/skills/` 或 `copilot-instructions.md`
+- `memory/YYYY-MM-DD.md` → 下次 session 的上下文恢复
 
 ---
 
