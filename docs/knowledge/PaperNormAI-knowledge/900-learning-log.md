@@ -125,6 +125,51 @@
 **后续建议动作**：
 - 继续进入 Phase 2 的下一步：建立 `PaperNormAI-feature-development.agent.md`（Phase 4 的执行 agent）。
 - 创建 4 个 skill 模块：`issue-evaluator`、`feature-readiness`、`feature-development`、`fix-development`。
+
+---
+
+## 2026-05-05 - Phase 1 核心链路完成 + 知识系统问题发现
+
+**学习类型**：增量学习
+
+**触发原因**：Phase 1 全部 KG 完成后，发现知识系统（skills/知识文档）未随开发进度更新，存在严重过期事实。
+
+**阅读范围**：
+- `backend/app/infrastructure/docling/parser.py`
+- `backend/app/domain/services/rule_extraction_service.py`
+- `backend/app/domain/services/semantic_validation_service.py`
+- `backend/app/infrastructure/ai/openai_provider.py`
+- `backend/app/infrastructure/persistence/spec_session_repository.py`
+- `docs/progress.md`、`handoff/BUILD-LOG.md`
+
+**新确认的事实**：
+- Phase 1 核心链路已完成：DoclingDocumentParser → RuleExtractionService → SemanticValidationService → CorrectionService
+- Phase 2 表格/插图/公式解析已完成：TableInfo/FigureInfo/FormulaInfo
+- 规则持久化已完成：SpecSessionModel + SpecSessionRepository
+- DeepSeek 已集成：AI_PROVIDER=deepseek，deepseek-chat 模型
+- 端到端验证通过：temp.docx 390段落，提取 17 条规则，检测 30 处违规
+- Docling v2.x 实际 API：`doc.texts`（非 `doc.elements`）、`doc.groups`（DOCX 为空）
+
+**发现的空白或冲突**：
+- `.ai/skills/*.md` 为说明文档形态，非可执行 skill 形态
+- `910-skill-run-log.md` 停在模板层，无真实运行记录
+- `000-doc-map.md` 仍描述"业务代码骨架尚未落地"（已过期）
+- `100-system-overview.md` 仍描述"当前还不能对后端代码做事实性描述"（已过期）
+- `700-capability-map.md` 仍描述"蓝图已定义，未落代码"（已过期）
+
+**更新了哪些知识文档**：
+- `.ai/skills/issue-evaluator.md` — 改为可执行 skill 形态
+- `.ai/skills/feature-readiness.md` — 改为可执行 skill 形态
+- `.ai/skills/feature-development.md` — 改为可执行 skill 形态
+- `.ai/skills/fix-development.md` — 改为可执行 skill 形态
+- `docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md` — 补充真实运行记录
+- `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md` — 更新为代码事实态
+- `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` — 更新为代码事实态
+- `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` — 更新为代码事实态
+
+**后续建议动作**：
+- 200/300/400/600/800 系列知识文档仍为蓝图描述，需要系统更新为代码事实态
+- 每次功能开发后，应立即更新对应知识文档（不要等到积累后再批量更新）
 - 开始搭建业务代码骨架（`backend/`、`clients/`、`template-library/`）。
 
 ## 2026-05-01 20:10 - 建立 Feature Development Agent 与 Skill 体系

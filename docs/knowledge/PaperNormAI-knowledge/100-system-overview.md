@@ -2,334 +2,120 @@
 
 ## 1. 文档目的
 
-本文件用于建立 PaperNormAI 的系统级公共认知，回答以下问题：
+本文件建立 PaperNormAI 的系统级公共认知，回答：
 
-1. PaperNormAI 当前要做的产品是什么。
-2. 当前 MVP 的真实边界在哪里。
-3. 系统的核心子系统是什么。
-4. 当前仓库已经具备哪些 AI 工程基础设施。
-5. 当前哪些内容是已存在事实，哪些仍是蓝图目标。
+1. PaperNormAI 当前要做的产品是什么
+2. 当前 MVP 的真实边界在哪里
+3. 系统的核心子系统是什么
+4. 当前已实现了哪些能力
 
-## 2. 覆盖范围
+## 2. 核心事实（2026-05-06 更新）
 
-本文件覆盖：
-
-- 产品目标
-- MVP 范围
-- 架构原则
-- 目标工程结构
-- 当前仓库状态
-- 高层业务流程
-
-## 3. 核心事实
-
-截至当前版本，PaperNormAI 的产品定位已明确为：
-
+**产品定位：**
 - 面向学生的 AI 论文格式校准工具
-- 重点解决 `.docx` 论文格式检测与自动修正问题
-- 用户上传自己的规范手册（spec_doc）和论文（thesis_doc），AI 从规范手册提取语义规则并对论文进行校验
+- 用户上传规范手册（spec_doc）和论文（thesis_doc），AI 从规范手册提取语义规则并对论文进行校验
 - 使用 AI-Word-Skill 技术实现"只改文字，保留排版"的修正合并
-- 模板系统作为 Fallback：当用户未上传规范手册时，使用系统内置规则
 
-截至当前版本，MVP 分两个阶段：
+**技术选型（已确认并实现）：**
 
-- **Phase 1（当前实施）：** 字体、字号、段落、页边距等基础文本格式
-- **Phase 2（后续）：** 公式、表格、插图格式检测与修正
-
-截至当前版本，MVP 关键技术选型已确认：
-
-| 组件 | 选型 | 理由 |
+| 组件 | 选型 | 状态 |
 |------|------|------|
-| 文档解析 | docling | 开源成熟，结构化输出能力强，作为 Python 库集成 |
-| 规则提取 | AI 语义理解 | 规范文档无法结构化规则化提取 |
-| 规则形态 | 抽象描述性规则 | 结构化规则无法覆盖全部规范内容 |
-| 文档合并 | AI-Word-Skill | "只改文字，保留排版"完美契合需求 |
-| 校验方式 | AI 语义校验 | 而非规则引擎比对 |
+| 文档解析 | docling v2.x | ✅ 已实现 |
+| 规则提取 | AI 语义理解（DeepSeek） | ✅ 已实现 |
+| 文档校验 | AI 语义校验 | ✅ 已实现 |
+| 文档合并 | AI-Word-Skill 模式 | ✅ 已实现 |
+| AI Provider | DeepSeek（兼容 OpenAI SDK） | ✅ 已配置 |
+| 规则持久化 | SQLite（SpecSessionModel） | ✅ 已实现 |
 
-截至当前版本，MVP 蓝图已明确以下边界：
-
-- 当前 MVP 只做 Web 端
-- 当前 MVP 只支持 `.docx`
-- 文档处理采用 docling 进行解析
-- 后端采用模块化单体，而不是微服务
-- 检测与修正采用 job 模型
-
-截至当前版本，仓库中已存在的主要资产仍然是：
-
-- AI 工程治理文档
-- MVP 工程架构蓝图
-- AI 工程协作体系蓝图
-- knowledge-builder agent
-- 知识治理规范
-
-截至当前版本，业务代码骨架尚未系统落地，因此当前系统认知以蓝图和治理规则为主，而不是以业务代码事实为主。
-
-## 4. 产品与范围总览
-
-### 4.1 产品目标
-
-PaperNormAI 的目标是帮助学生在提交论文前，快速识别并修正格式规范问题，减少手工排版成本。
-
-核心价值主张：**用户上传自己的规范手册，AI 理解规范并校验论文格式**
-
-MVP Phase 1 聚焦的基础格式问题：
-
-- 字体
-- 字号
-- 行距
-- 段前段后
-- 标题层级
-- 页边距
-
-MVP Phase 2 扩展到：
-
-- 参考文献格式
-- 引用一致性
-- 公式格式
-- 表格格式
-- 插图格式
-
-### 4.2 MVP 的单一核心闭环
-
+**Phase 1 核心链路（已完成）：**
 ```text
-用户上传规范手册 (spec_doc) ──→ docling 解析 ──→ AI 提取语义规则
-用户上传论文 (thesis_doc)   ──→ docling 解析
-                                          ↓
-                              AI 语义校验 ──→ ValidationReport
-                                          ↓
-                              Git-diff 风格展示差异
-                                          ↓
-                              用户手动编辑校正
-                                          ↓
-                              用户确认 ──→ AI-Word-Skill 合并输出 corrected.docx
-
-Fallback：用户未上传 spec_doc → 使用系统内置规则（论文规范.md）
+用户上传 spec_doc + thesis_doc
+  → docling 解析 → DocumentModel（段落/章节）
+  → RuleExtractionService → 规则列表（List[Dict]）
+  → SemanticValidationService → ValidationReport（violations）
+  → CorrectionService + DocumentMerger → corrected.docx
 ```
 
-### 4.3 当前不进入 MVP 的范围
+**Phase 2 扩展（已完成）：**
+- DocumentModel 扩展支持 TableInfo、FigureInfo、FormulaInfo
+- temp.docx 验证：Tables=6，Figures=13，Formulas=20
 
-以下内容在当前蓝图中明确不进入首发范围：
+## 3. 已实现模块清单
 
-- Word 插件
-- 桌面客户端
-- PDF 自动修正
-- LaTeX 支持
-- 多租户组织空间
-- 复杂后台管理
-- 团队协作流程
-- 公式、表格、插图格式检测与修正（Phase 2）
+| 模块 | 路径 | 说明 |
+|------|------|------|
+| DoclingDocumentParser | `backend/app/infrastructure/docling/parser.py` | 解析 DOCX → DocumentModel |
+| DocumentModel | `backend/app/infrastructure/docling/document_model.py` | 中间表示（段落/章节/表格/插图/公式） |
+| RuleExtractionService | `backend/app/domain/services/rule_extraction_service.py` | AI 从 spec_doc 提取规则 |
+| SemanticValidationService | `backend/app/domain/services/semantic_validation_service.py` | AI 校验 thesis_doc |
+| ValidationReport | `backend/app/domain/entities/validation_report.py` | 违规报告实体 |
+| DocumentMerger | `backend/app/infrastructure/docx/document_merger.py` | AI-Word-Skill 模式合并 |
+| CorrectionService | `backend/app/domain/services/correction_service.py` | 修正服务 |
+| OpenAIProvider | `backend/app/infrastructure/ai/openai_provider.py` | 支持 DeepSeek/Ollama/OpenAI |
+| SpecSessionRepository | `backend/app/infrastructure/persistence/spec_session_repository.py` | 规则持久化 |
+| spec_validation API | `backend/app/api/endpoints/spec_validation.py` | /parse-spec, /validate-with-spec |
 
-## 5. 系统核心子系统
-
-### 5.1 文档解析子系统
-
-定位：第一核心基础设施。
-
-职责：
-
-- 使用 docling 作为 Python 库解析 `.docx` 文档
-- 将 Word 文档转换为结构化中间表示
-- 支持规范手册和论文文档两种输入的处理
-- 暴露统一的文档结构供后续 AI 处理使用
-
-### 5.2 AI 规则提取子系统
-
-定位：第一核心。
-
-职责：
-
-- 接收规范手册的结构化解析结果
-- 通过 AI 语义理解提取格式规则（抽象描述性规则，非结构化参数）
-- 将规则持久化存储（用户级别），支持同一用户后续复用
-- 为论文校验提供规则输入
-
-### 5.3 AI 语义校验子系统
-
-定位：第一核心。
-
-职责：
-
-- 接收论文文档的结构化解析结果
-- 基于 AI 提取的语义规则进行校验
-- 生成 ValidationReport，包含违规位置、原始内容、修正建议
-- 提供 Git-diff 风格的差异展示数据
-
-### 5.4 修正合并子系统
-
-定位：第一核心。
-
-职责：
-
-- 接收用户确认的修正内容
-- 使用 AI-Word-Skill 技术进行"只改文字，保留排版"合并
-- 输出修正后的 `.docx` 文档
-- 确保公式、表格、插图等元素样式原样保留（Phase 2）
-
-### 5.5 模板系统子系统
-
-定位：Fallback 机制。
-
-职责：
-
-- 当用户未上传规范手册时提供系统内置规则
-- 系统内置规则来源：`论文规范.md`
-- 与用户自定义规则同等处理流程
-
-### 5.6 用户交互与编辑子系统
-
-定位：用户体验层。
-
-职责：
-
-- 展示 Git-diff 风格校验报告
-- 支持用户在最终保存前手动编辑修正内容
-- 管理用户确认流程
-
-### 5.7 AI 工程协作层
-
-定位：当前阶段已经在落地的外部工程系统。
-
-职责：
-
-- 管理 AI 行为边界
-- 建立知识学习与知识沉淀机制
-- 为后续功能开发提供前置认知系统
-
-## 6. 目标工程结构与当前状态
-
-### 6.1 蓝图目标结构
-
-根据 MVP 工程架构蓝图，目标工程结构包括：
-
-- `backend/`
-- `clients/`
-- `template-library/`
-- `docs/architecture/`
-- `docs/knowledge/`
-- `.ai/`
-- `.github/`
-
-### 6.2 当前已落地结构
-
-当前已确认存在：
-
-- `.github/copilot-instructions.md`
-- `.ai/agents/PaperNormAI-knowledge-builder.agent.md`
-- `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
-- `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
-- `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
-- 本轮建立的知识库骨架文档
-
-### 6.3 当前未落地但已定义目标结构
-
-当前尚未从代码层面系统确认的目标结构包括：
-
-- `backend/app/core/`
-- `backend/app/domain/`
-- `backend/app/application/`
-- `backend/app/infrastructure/`
-- `backend/app/api/`
-- `clients/apps/web/`
-- `clients/packages/`
-- `template-library/`
-
-这意味着：
-
-- 当前可以确定的是架构意图
-- 当前尚不能把这些结构写成“代码已实现事实”
-
-## 7. 高层业务流程
-
-### 7.1 主流程（Phase 1）
+## 4. 核心业务流程（已实现）
 
 ```text
-用户上传规范手册 (spec_doc)
-  -> docling 解析为结构化文档
-  -> AI 语义理解提取规则（抽象描述性规则）
-  -> 规则持久化（用户级别）
+POST /spec/parse-spec
+  → DoclingDocumentParser.parse(spec_doc) → DocumentModel
+  → RuleExtractionService.extract_rules(spec_doc) → rules_dicts
+  → SpecSessionRepository.save(session_id, rules_dicts)
+  → 返回 session_id + rules_count
 
-用户上传论文 (thesis_doc)
-  -> docling 解析为结构化文档
-  -> AI 基于规则进行语义校验
-  -> 生成 ValidationReport（含违规位置、原始内容、修正建议）
-  -> Git-diff 风格展示差异
-
-用户手动编辑校正
-  -> 用户确认
-  -> AI-Word-Skill 合并回 .docx（只改文字，保留排版）
-  -> 输出 corrected.docx
+POST /spec/validate-with-spec?session_id=xxx
+  → SpecSessionRepository.find(session_id) → rules_dicts
+  → DoclingDocumentParser.parse(thesis_doc) → DocumentModel
+  → SemanticValidationService.validate(thesis_doc, rules_dicts) → ValidationReport
+  → 返回 violations 统计
 ```
 
-**Fallback 流程：**
-用户未上传 spec_doc → 使用系统内置规则（论文规范.md）→ 后续流程相同
+## 5. 当前未实现
 
-### 7.2 关键技术说明
+| 功能 | 状态 |
+|------|------|
+| 前端 Web 界面 | 未实现 |
+| template-library | 未实现 |
+| ValidationReport 完整持久化 | 未实现（仅返回计数） |
+| 用户手动编辑修正 UI | 未实现 |
+| corrected.docx 下载 API | 未实现 |
 
-**Docling 集成：**
-- 作为 Python 库集成到后端
-- 统一解析 spec_doc 和 thesis_doc
-- 输出结构化中间表示供 AI 处理
+## 6. 关键技术说明
 
-**AI-Word-Skill 集成：**
-- 仅在用户确认后触发
-- 实现”只改文字，保留排版”
-- Phase 1 不处理公式/表格/插图节点
+**Docling v2.x API：**
+- `docling_doc.texts` — TextItem 和 SectionHeaderItem 列表
+- `docling_doc.groups` — DOCX 中为空（PDF 有嵌套结构）
+- `docling_doc.tables` — 表格列表
+- `docling_doc.pictures` — 图片列表
+- `docling_doc.iterate_items()` — 遍历所有元素（含 FormulaItem）
 
-**规则存储：**
-- 随用户 Session 存在
-- 持久化以备同一用户后续复用
-- 用户级别规则隔离
+**AI-Word-Skill 模式：**
+- 不是 Python 包，是代码模式
+- 核心：`shutil.copy2()` 复制原档 → 修改 `run.text` → `doc.save()`
+- 保留格式，只改文字内容
 
-### 7.3 当前状态说明
+**DeepSeek 配置：**
+- `AI_PROVIDER=deepseek`
+- `DEEPSEEK_BASE_URL=https://api.deepseek.com/v1`
+- `DEEPSEEK_MODEL=deepseek-chat`
 
-截至当前版本，这条主流程主要存在于架构蓝图中，尚未在业务代码中系统落地。
+## 7. 与其他文档的关联
 
-因此当前知识库应将其记录为：
+- `docs/progress.md` — 当前实施状态（实时更新）
+- `handoff/BUILD-LOG.md` — 构建历史（实时更新）
+- `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` — 功能能力地图
+- `docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md` — Skill 运行日志
 
-- **已确认的架构目标流程**
-- 而不是”已实现流程”
+## 8. 更新记录
 
-## 8. 与其他文档的关联
+**最近复核时间**：2026-05-06
 
-- 前置文档：
-  - `.github/copilot-instructions.md`
-  - `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
-- 相关文档：
-  - `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
-  - `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`
-  - `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
-
-## 9. 当前已知边界
-
-1. 当前系统总览以蓝图和治理文档为主，不以业务代码为主。
-2. 当前可以明确 AI 工程协作系统已经开始落地。
-3. 当前还不能对后端、前端、模板库的具体代码结构做事实性描述。
-4. 当前系统总览的首要任务是建立统一认知，不是穷尽实现细节。
-
-## 10. 待确认问题
-
-1. docling 的具体 API 接口和使用方式需要实际集成验证
-2. AI-Word-Skill 的集成方式和限制需要实际验证
-3. 规则持久化的具体存储方案（数据库表结构）
-4. 用户上传 spec_doc 和 thesis_doc 的 UI 流程细节
-5. ValidationReport 的具体数据结构设计
-6. 用户手动编辑的交互设计
-
-## 11. 更新记录
-
-**最近复核时间**：2026-05-03
-
-**复核依据**：
-- 代码范围：仓库根目录、`.github/`、`.ai/agents/`、`docs/architecture/`、`docs/knowledge/`、`论文规范.md`
-- 与项目负责人确认的业务流程
-
-**重要架构变更（2026-05-03）：**
-
-1. **规则来源变更：** 从"系统预置模板"改为"用户上传规范手册 AI 提取"
-2. **文档解析变更：** 从 `python-docx` 改为 `docling`
-3. **修正合并方式：** 新增 AI-Word-Skill 集成
-4. **模板系统重定位：** 从核心降级为 Fallback 机制
+**重要变更（2026-05-06）：**
+- 全面更新为代码事实态（Phase 1 + Phase 2 已完成）
+- 添加已实现模块清单
+- 添加已实现业务流程
+- 更新技术说明（Docling v2.x API、DeepSeek 配置）
+- 删除"尚未落地"的描述，改为准确的当前状态
 
 **当前可信度**：高
-
-**待确认点**：业务实现尚未开始，当前系统总览主要基于蓝图事实与现存治理资产。

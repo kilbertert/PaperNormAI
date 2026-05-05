@@ -2,7 +2,7 @@
 
 ## 1. 文档目的
 
-本文件是 PaperNormAI 知识库的导航总线，用来回答三个问题：
+本文件是 PaperNormAI 知识库的导航总线，回答三个问题：
 
 1. 我要理解什么主题，应该先读哪份文档？
 2. 我要处理什么任务，应该先进入哪些知识入口？
@@ -10,166 +10,167 @@
 
 ## 2. 覆盖范围
 
-本文件覆盖：
-
 - 知识库文档导航
 - 架构蓝图与知识文档的关系
 - agent / skill 的推荐阅读顺序
 - 模块、功能、流程与文档之间的映射关系
 
-## 3. 核心事实
+## 3. 核心事实（2026-05-06 更新）
 
-截至当前版本，仓库中已确认存在的 AI 协作文档有：
+截至当前版本，以下 AI 协作文档已确认存在：
 
 - `.github/copilot-instructions.md`
 - `.ai/agents/PaperNormAI-knowledge-builder.agent.md`
+- `.ai/agents/PaperNormAI-feature-development.agent.md`
+- `.ai/skills/issue-evaluator.md`
+- `.ai/skills/feature-readiness.md`
+- `.ai/skills/feature-development.md`
+- `.ai/skills/fix-development.md`
 - `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
 - `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
+- `docs/architecture/adr-001-005-architecture-decisions.md`
 - `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
 
-截至当前版本，以下知识库骨架文档将在本轮建立：
+截至当前版本，**业务代码已系统落地**，主要模块包括：
 
-- `000-doc-map.md`
-- `100-system-overview.md`
-- `700-capability-map.md`
-- `900-learning-log.md`
+| 模块 | 路径 | 状态 |
+|------|------|------|
+| 文档解析 | `backend/app/infrastructure/docling/` | ✅ 已实现 |
+| AI 规则提取 | `backend/app/domain/services/rule_extraction_service.py` | ✅ 已实现 |
+| AI 语义校验 | `backend/app/domain/services/semantic_validation_service.py` | ✅ 已实现 |
+| 文档修正合并 | `backend/app/infrastructure/docx/document_merger.py` | ✅ 已实现 |
+| 修正服务 | `backend/app/domain/services/correction_service.py` | ✅ 已实现 |
+| Spec 校验 API | `backend/app/api/endpoints/spec_validation.py` | ✅ 已实现 |
+| 规则持久化 | `backend/app/infrastructure/persistence/spec_session_repository.py` | ✅ 已实现 |
+| AI Provider | `backend/app/infrastructure/ai/openai_provider.py` | ✅ 支持 DeepSeek/Ollama/OpenAI |
 
-截至当前版本，业务代码骨架（如 `backend/`、`clients/`、`template-library/`）仍主要存在于蓝图中，当前仓库尚未确认这些目录已经落地。
+截至当前版本，Phase 1 核心链路已完成，Phase 2 表格/插图/公式解析已完成。
 
 ## 4. 文档导航
 
 ### 4.1 先读什么
 
-#### 如果你要理解 PaperNormAI 的产品与工程架构（2026-05-03 更新）
+#### 如果你要理解 PaperNormAI 的产品与工程架构
 
-按顺序阅读：
+1. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
+2. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
+3. `docs/architecture/adr-001-005-architecture-decisions.md`
+4. `docs/progress.md`
 
-1. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` — 系统总览（架构已更新）
-2. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` — 功能能力地图（Phase 1 & 2）
-3. `docs/architecture/adr-001-005-architecture-decisions.md` — 关键架构决策
-4. `docs/design/validation-report-datamodel.md` — ValidationReport 数据结构设计
+#### 如果你要进行功能开发（Bob 角色）
+
+1. `handoff/ARCHITECT-BRIEF.md` — 当前步骤任务
+2. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
+3. 对应专题文档（200-800）
+4. 运行 `.ai/skills/feature-readiness.md`
+
+#### 如果你是 Arch 开始新会话
+
+1. `handoff/SESSION-CHECKPOINT.md`（如有）
+2. `handoff/BUILD-LOG.md`
+3. `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`（本文件）
 
 #### 如果你要理解 AI 协作规则
-
-按顺序阅读：
 
 1. `.github/copilot-instructions.md`
 2. `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
 3. `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
 
-#### 如果你要进行功能开发
-
-按顺序阅读：
-
-1. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
-2. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
-3. `docs/architecture/adr-001-005-architecture-decisions.md`
-4. 对应的 design 文档（如 `validation-report-datamodel.md`）
-
 ### 4.2 当前知识文档地图
 
-| 文档 | 主题 | 当前状态 | 适用对象 |
-|---|---|---|---|
-| `.github/copilot-instructions.md` | AI 工程治理规则 | 已存在 | 所有 agent / skill |
-| `docs/architecture/2026-04-28-mvp-engineering-blueprint.md` | MVP 工程架构 | 已存在 | 架构阅读、开发前置 |
-| `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md` | AI 协作体系蓝图 | 已存在 | agent / skill 设计 |
-| `docs/architecture/adr-001-005-architecture-decisions.md` | 关键架构决策（2026-05-03） | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md` | 知识治理规范 | 已存在 | knowledge-builder、维护者 |
-| `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md` | 知识导航总入口 | 已存在 | 所有 agent / skill |
-| `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` | 系统总览（2026-05-03 更新） | 已存在 | knowledge-builder、开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` | 功能能力地图（2026-05-03 更新） | 已存在 | 产品理解、开发前置 |
-| `docs/design/validation-report-datamodel.md` | ValidationReport 数据结构设计 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/200-database-models.md` | 数据库模型蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/300-backend-kernel-services.md` | 后端核心服务蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/400-api-architecture.md` | API 架构蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/500-frontend-architecture.md` | 前端架构蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/600-domain-models.md` | 领域模型蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/800-cross-layer-call-chains.md` | 跨层调用链蓝图 | 已存在 | 开发前置 |
-| `docs/knowledge/PaperNormAI-knowledge/900-learning-log.md` | 学习日志 | 已存在 | knowledge-builder |
+| 文档 | 主题 | 状态 |
+|------|------|------|
+| `.github/copilot-instructions.md` | AI 工程治理规则 | ✅ 已存在 |
+| `docs/architecture/2026-04-28-mvp-engineering-blueprint.md` | MVP 工程架构 | ✅ 已存在 |
+| `docs/architecture/adr-001-005-architecture-decisions.md` | 关键架构决策 | ✅ 已存在 |
+| `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md` | 知识导航总入口 | ✅ 已存在 |
+| `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md` | 系统总览 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/200-database-models.md` | 数据库模型 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/300-backend-kernel-services.md` | 后端核心服务 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/400-api-architecture.md` | API 架构 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/600-domain-models.md` | 领域模型 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md` | 功能能力地图 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/800-cross-layer-call-chains.md` | 跨层调用链 | ✅ 已存在（需更新） |
+| `docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md` | Skill 运行日志 | ✅ 已有真实记录 |
+| `docs/progress.md` | 当前实施状态快照 | ✅ 实时更新 |
+| `handoff/BUILD-LOG.md` | 构建历史 | ✅ 实时更新 |
 
 ## 5. 任务类型到阅读顺序的映射
 
 ### 5.1 总览学习任务
 
-推荐读取：
-
 1. `.github/copilot-instructions.md`
-2. `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
-3. `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
-4. `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
-5. `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`
-6. `README.md`
+2. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
+3. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
+4. `docs/progress.md`
 
 ### 5.2 功能开发前的就绪性判断
 
-推荐读取：
+1. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
+2. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
+3. `handoff/BUILD-LOG.md`
+4. 对应专题文档（200-800）
 
-1. `.github/copilot-instructions.md`
-2. `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`
-3. `docs/knowledge/PaperNormAI-knowledge/100-system-overview.md`
-4. `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
-5. `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
+### 5.3 缺陷修复
 
-### 5.3 后续专题学习任务
+1. `handoff/BUILD-LOG.md` — 了解已知问题
+2. `docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md` — 查看历史修复记录
+3. 对应专题文档
 
-按主题增加的专题知识文档：
+## 6. 模块与文档映射（已落地）
 
-- 数据库专题 → `200-database-models.md` ✅
-- 后端核心服务专题 → `300-backend-kernel-services.md` ✅
-- API 专题 → `400-api-architecture.md` ✅
-- 前端专题 → `500-frontend-architecture.md` ✅
-- 领域模型专题 → `600-domain-models.md` ✅
-- 跨层调用链专题 → `800-cross-layer-call-chains.md` ✅
-
-## 6. 模块与文档映射
-
-### 6.1 当前已存在模块映射
-
-当前仓库中，已确认存在的非业务模块主要是：
-
-- AI 治理模块 → `.github/copilot-instructions.md`
-- AI 学习 agent 模块 → `.ai/agents/PaperNormAI-knowledge-builder.agent.md`
-- 架构蓝图模块 → `docs/architecture/*`
-- 知识治理模块 → `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
-
-### 6.2 目标业务模块映射（来自蓝图，尚待代码落地）
-
-> 以下映射描述的是蓝图目标结构，不代表当前代码已全部存在。
-
-| 目标模块 | 对应知识文档 | 当前状态 |
-|---|---|---|
-| `backend/app/domain/document/` | `600-domain-models.md` | 待建立知识，待落代码 |
-| `backend/app/domain/template/` | `600-domain-models.md`、`700-capability-map.md` | 待建立知识，待落代码 |
-| `backend/app/domain/validation/` | `300-backend-kernel-services.md`、`600-domain-models.md` | 待建立知识，待落代码 |
-| `backend/app/domain/correction/` | `300-backend-kernel-services.md`、`600-domain-models.md` | 待建立知识，待落代码 |
-| `backend/app/api/` | `400-api-architecture.md` | 待建立知识，待落代码 |
-| `clients/apps/web/` | `500-frontend-architecture.md` | 待建立知识，待落代码 |
-| `template-library/` | `700-capability-map.md`、后续模板专题文档 | 待建立知识，待落代码 |
+| 代码模块 | 对应知识文档 | 状态 |
+|----------|-------------|------|
+| `backend/app/infrastructure/docling/` | `300-backend-kernel-services.md` | ✅ 代码已实现 |
+| `backend/app/domain/services/` | `300-backend-kernel-services.md`、`600-domain-models.md` | ✅ 代码已实现 |
+| `backend/app/api/endpoints/spec_validation.py` | `400-api-architecture.md` | ✅ 代码已实现 |
+| `backend/app/infrastructure/persistence/` | `200-database-models.md` | ✅ 代码已实现 |
+| `backend/app/infrastructure/ai/` | `300-backend-kernel-services.md` | ✅ 代码已实现 |
 
 ## 7. 当前已知边界
 
-1. 当前知识库仍处于骨架建设阶段。
-2. 当前能够确认的内容，主要来自蓝图文档、治理文档和已建立的 agent 文档。
-3. 业务代码骨架尚未系统落地，因此大量业务知识暂时只能记录为“目标结构”而不是“已实现事实”。
-4. 当前 `000-doc-map.md` 的重点是建立稳定的导航入口，而不是穷尽业务模块细节。
+1. 前端（`clients/apps/web/`）尚未实现，仍为蓝图目标。
+2. `template-library/` 尚未实现。
+3. 知识文档（200-800 系列）部分内容仍为蓝图描述，未反映最新代码实现。
 
 ## 8. 待确认问题
 
-1. `backend/`、`clients/`、`template-library/` 等蓝图目标目录何时正式落地。
-2. 后续 `PaperNormAI-feature-development.agent.md` 与各类 skill 文件的实际落盘路径和命名是否保持蓝图一致。
-3. 后续是否需要把知识文档再细分到“规则引擎专题”“模板系统专题”等更细粒度层级。
+1. 知识文档（200-800 系列）何时系统更新为代码事实态（通过 knowledge-sync skill 逐步完成）。
+2. 前端开发何时启动。
 
 ## 9. 更新记录
 
-**最近复核时间**：2026-04-28
+```
+三人协作框架 (handoff/)          外部工程系统 (.ai/)
+─────────────────────────────────────────────────────
+Arch Session Start
+  → 读 BUILD-LOG.md              → 读 000-doc-map.md（本文件）
+  → 写 ARCHITECT-BRIEF.md        ← 知识库提供系统状态
 
-**复核依据**：
-- 代码范围：仓库根目录、`.github/`、`.ai/agents/`、`docs/architecture/`、`docs/knowledge/`
-- 参考文档：
-  - `docs/architecture/2026-04-28-mvp-engineering-blueprint.md`
-  - `docs/architecture/2026-04-28-ai-engineering-collaboration-blueprint.md`
-  - `.ai/agents/PaperNormAI-knowledge-builder.agent.md`
+Bob 开发
+  → 读 ARCHITECT-BRIEF.md        → 读对应专题文档（200-800）
+                                  → 运行 feature-readiness skill
+                                  → 运行 feature-development skill
+
+Richard 审核
+  → 读 REVIEW-REQUEST.md
+  → 写 REVIEW-FEEDBACK.md
+
+Arch Deploy Gate
+  → 更新 BUILD-LOG.md            → 运行 knowledge-sync skill
+                                  → 更新知识文档（200-800）
+                                  → 写入 910-skill-run-log.md
+```
+
+**知识库自动更新触发点：** Arch 在 Deploy Gate 完成后，运行 `.ai/skills/knowledge-sync.md`。
+
+## 9. 更新记录
+
+**最近复核时间**：2026-05-06
+
+**重要变更（2026-05-06）：**
+- 业务代码已系统落地，更新核心事实
+- 添加两套系统协作关系图
+- knowledge-sync skill 作为自动更新触发点
 
 **当前可信度**：高
-
-**待确认点**：业务代码骨架尚未落地，当前大量模块映射仍属于蓝图目标态而非代码事实。
