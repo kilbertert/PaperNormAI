@@ -1,5 +1,6 @@
 """Semantic validation service for validating thesis documents against rules."""
 
+import re
 from typing import List, Dict, Optional
 from datetime import datetime
 from app.infrastructure.docling.document_model import DocumentModel
@@ -59,12 +60,12 @@ class SemanticValidationService:
 请以结构化文本形式输出违规列表，格式如下：
 
 [违规]
-段落: {段落编号}
-原始内容: "{相关文本片段}"
-违规规则: {规则描述}
-违规类型: {font/size/spacing/margin/heading/paragraph}
+段落: {{段落编号}}
+原始内容: "{{相关文本片段}}"
+违规规则: {{规则描述}}
+违规类型: {{font/size/spacing/margin/heading/paragraph}}
 严重程度: ERROR（必须修正）/ WARNING（建议修正）
-修正建议: {具体的修正方式}
+修正建议: {{具体的修正方式}}
 
 ---
 
@@ -198,28 +199,44 @@ class SemanticValidationService:
         for line in lines:
             line = line.strip()
 
-            if not line or (line.startswith('[') and line.endswith(']')):
-                section = line.strip('[]')
-                if section == '校验结果':
-                    break
+            if not line:
                 if pending_violation_data:
                     self._create_violation_from_data(pending_violation_data, doc, violations)
                     pending_violation_data = {}
                 continue
 
+            # Check for [校验结果] section marker (must be checked before [违规])
+            if line.startswith('[校验结果]'):
+                if pending_violation_data:
+                    self._create_violation_from_data(pending_violation_data, doc, violations)
+                    pending_violation_data = {}
+                break
+
+            # Check for [违规] marker
+            if line.startswith('[违规]'):
+                if pending_violation_data:
+                    self._create_violation_from_data(pending_violation_data, doc, violations)
+                pending_violation_data = {"paragraph": current_paragraph, "line_collected": [line]}
+                continue
+
             if line.startswith('段落:'):
                 try:
-                    current_paragraph = int(line.split(':')[1].strip())
+                    num_str = line.split(':')[1].strip()
+                    num_str = re.sub(r'[^0-9]', '', num_str)
+                    current_paragraph = int(num_str) if num_str else None
+                    # If pending violation exists without paragraph, update it
+                    if pending_violation_data and pending_violation_data.get("paragraph") is None:
+                        pending_violation_data["paragraph"] = current_paragraph
                 except (ValueError, IndexError):
                     continue
 
             elif line.startswith('[违规]'):
                 if pending_violation_data:
                     self._create_violation_from_data(pending_violation_data, doc, violations)
-                pending_violation_data = {"paragraph": current_paragraph, "line_collected": []}
-                pending_violation_data["line_collected"].append(line)
+                pending_violation_data = {"paragraph": current_paragraph, "line_collected": [line]}
+                continue  # skip adding [违规] to line_collected
 
-            elif pending_violation_data is not None:
+            elif pending_violation_data is not None and "line_collected" in pending_violation_data:
                 pending_violation_data["line_collected"].append(line)
 
                 if line.startswith('原始内容:'):

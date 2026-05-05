@@ -1,7 +1,7 @@
 """Document merger for applying corrections to .docx files.
 
-Uses AI-Word-Skill if available, otherwise falls back to basic
-text replacement that preserves paragraph styles.
+Uses AI-Word-Skill pattern: copy original file → edit run.text → save.
+This preserves all original formatting.
 """
 
 from dataclasses import dataclass, field
@@ -43,22 +43,6 @@ class DocumentMerger:
                        Defaults to system temp directory.
         """
         self._output_dir = output_dir
-        self._ai_word_skill_available = self._check_ai_word_skill()
-
-    def _check_ai_word_skill(self) -> bool:
-        """Check if AI-Word-Skill package is available."""
-        try:
-            # Try to import ai_word_skill
-            import importlib
-            spec = importlib.util.find_spec("ai_word_skill")
-            return spec is not None
-        except Exception:
-            return False
-
-    @property
-    def using_ai_word_skill(self) -> bool:
-        """Returns True if AI-Word-Skill is available and being used."""
-        return self._ai_word_skill_available
 
     def merge(
         self,
@@ -103,10 +87,7 @@ class DocumentMerger:
         try:
             shutil.copy2(original_path, temp_path)
 
-            if self._ai_word_skill_available:
-                result = self._merge_with_ai_word_skill(temp_path, corrections)
-            else:
-                result = self._merge_with_basic_replacement(temp_path, corrections)
+            result = self._apply_corrections(temp_path, corrections)
 
             # Check if any corrections were applied
             applied = getattr(result, 'applied_corrections', 0)
@@ -145,67 +126,15 @@ class DocumentMerger:
 
         return output_path
 
-    def _merge_with_ai_word_skill(
+    def _apply_corrections(
         self,
         docx_path: Path,
         corrections: List[Dict],
     ) -> MergeResult:
-        """Merge corrections using AI-Word-Skill library.
+        """Apply corrections using AI-Word-Skill pattern.
 
-        AI-Word-Skill provides precise text replacement while preserving
-        all formatting, styles, and document structure.
-        """
-        try:
-            from ai_word_skill import WordSkillMerger
-
-            merger = WordSkillMerger(str(docx_path))
-            applied = 0
-            failed = []
-
-            for correction in corrections:
-                try:
-                    merger.replace_text(
-                        original=correction["original"],
-                        replacement=correction["fixed"],
-                        paragraph_index=correction.get("paragraph_index"),
-                        context_before=correction.get("context_before"),
-                        context_after=correction.get("context_after"),
-                    )
-                    applied += 1
-                except Exception as e:
-                    failed.append({
-                        "original": correction.get("original", ""),
-                        "paragraph_index": correction.get("paragraph_index"),
-                        "error": str(e)
-                    })
-
-            merger.save()
-
-            if failed:
-                return MergeResult(
-                    success=False,
-                    output_path=docx_path,
-                    applied_corrections=applied,
-                    failed_corrections=failed
-                )
-            return MergeResult(success=True, output_path=docx_path, applied_corrections=applied)
-
-        except Exception as e:
-            return MergeResult(
-                success=False,
-                output_path=docx_path,
-                failed_corrections=[{"original": "N/A", "error": f"AI-Word-Skill failed: {str(e)}"}]
-            )
-
-    def _merge_with_basic_replacement(
-        self,
-        docx_path: Path,
-        corrections: List[Dict],
-    ) -> MergeResult:
-        """Merge corrections using basic text replacement.
-
-        This method preserves paragraph styles and formatting but may
-        lose complex inline formatting within the replaced text.
+        Copy original file → edit run.text → save.
+        This preserves all original formatting.
         """
         doc = Document(str(docx_path))
         applied = 0
@@ -218,7 +147,7 @@ class DocumentMerger:
             context_after = correction.get("context_after")
             paragraph_index = correction.get("paragraph_index")
 
-            # Fix 2: Try paragraph_index hint first
+            # Try paragraph_index hint first
             if paragraph_index:
                 target_idx = paragraph_index - 1  # Convert to 0-based
                 if 0 <= target_idx < len(doc.paragraphs):

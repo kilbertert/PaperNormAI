@@ -32,10 +32,16 @@ class Settings(BaseSettings):
     max_upload_size: int = 50 * 1024 * 1024  # 50MB
 
     # AI Service
-    ai_provider: str = "openai"  # openai / local
+    ai_provider: str = "openai"  # openai / ollama / deepseek
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
-    ai_timeout: int = 30
+    ollama_api_key: str = ""
+    ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_model: str = "qwen2.5:0.5b"
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-chat"
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    ai_timeout: int = 60
 
     # JWT Auth
     secret_key: str = "change-me-in-production"

@@ -26,7 +26,15 @@
       "Bash(git checkout *)",
       "Bash(dir \"D:\\\\AI\\\\project\\\\PaperNormAI\\\\handoff\\\\\" 2>/dev/null)",
       "Bash(rtk gain *)",
-      "Bash(python -c \"import docling; print\\(docling.__version__\\)\")"
+      "Bash(python -c \"import docling; print\\(docling.__version__\\)\")",
+      "Bash(python -c \"from docling.datamodel.document import Document; print\\(Document\\)\")",
+      "Bash(python -c \"from docling_core.types.doc import DoclingDocument; import inspect; print\\(inspect.signature\\(DoclingDocument.__init__\\)\\)\")",
+      "Bash(python -c \"from docling.document_converter import DocumentConverter; import inspect; sig = inspect.signature\\(DocumentConverter.convert\\); print\\('convert returns:', sig.return_annotation\\)\")",
+      "Bash(python -c \"from docling.datamodel.document import ConversionResult; print\\('document field type hint:'\\); import typing; print\\(typing.get_type_hints\\(ConversionResult\\) if hasattr\\(typing, 'get_type_hints'\\) else 'use inspect'\\)\")",
+      "Bash(python *)",
+      "Bash(ollama signin *)",
+      "Bash(where ollama *)",
+      "Bash(dir /b *.docx)"
     ]
   }
 }

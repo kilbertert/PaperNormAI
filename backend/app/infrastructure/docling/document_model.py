@@ -87,6 +87,31 @@ class DocumentStructure:
 
 
 @dataclass
+class TableInfo:
+    """Table information extracted from a document."""
+    rows: int = 0
+    cols: int = 0
+    caption: Optional[str] = None
+    style: Optional[str] = None  # e.g., "table", "grid"
+
+
+@dataclass
+class FigureInfo:
+    """Figure/image information extracted from a document."""
+    width: float = 0.0  # pixels
+    height: float = 0.0  # pixels
+    caption: Optional[str] = None
+
+
+@dataclass
+class FormulaInfo:
+    """Formula information extracted from a document."""
+    content: str = ""
+    numbered: bool = False
+    number: Optional[str] = None  # e.g., "(1)", "(2)"
+
+
+@dataclass
 class DocumentModel:
     """
     Unified document model holding parsed document content.
@@ -97,6 +122,9 @@ class DocumentModel:
     paragraph_format: list[ParagraphFormat] = field(default_factory=list)
     page_format: PageFormat = field(default_factory=PageFormat)
     structure: DocumentStructure = field(default_factory=DocumentStructure)
+    tables: list[TableInfo] = field(default_factory=list)
+    figures: list[FigureInfo] = field(default_factory=list)
+    formulas: list[FormulaInfo] = field(default_factory=list)
 
     def get_text_content(self) -> str:
         """Extract all text content as a single string."""

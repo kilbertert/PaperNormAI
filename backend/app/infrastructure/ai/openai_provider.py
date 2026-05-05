@@ -1,4 +1,4 @@
-"""OpenAI API provider for AI enhancement."""
+"""AI provider supporting OpenAI and Ollama-compatible APIs."""
 
 from typing import Optional
 import json
@@ -13,15 +13,48 @@ except ImportError:
 
 
 class OpenAIProvider:
-    """OpenAI API provider for L3 rule AI enhancement."""
+    """OpenAI API provider for L3 rule AI enhancement.
 
-    def __init__(self, api_key: Optional[str] = None):
-        self._api_key = api_key or settings.openai_api_key
-        self._model = settings.openai_model
+    Supports both OpenAI and Ollama-compatible endpoints.
+    """
+
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None,
+                 base_url: Optional[str] = None):
         self._timeout = settings.ai_timeout
+        self._base_url = base_url
         self._client = None
+        self._provider = settings.ai_provider
+
+        # Get API key, model, base_url based on provider
+        if self._provider == "deepseek":
+            self._api_key = api_key or settings.deepseek_api_key
+            self._model = model or settings.deepseek_model
+            self._base_url = base_url or settings.deepseek_base_url
+        elif self._provider == "ollama":
+            self._api_key = api_key or settings.ollama_api_key
+            self._model = model or settings.ollama_model
+            self._base_url = base_url or settings.ollama_base_url
+        else:  # openai
+            self._api_key = api_key or settings.openai_api_key
+            self._model = model or settings.openai_model
+            self._base_url = base_url
 
         if OPENAI_AVAILABLE and self._api_key:
+            self._init_client()
+
+    def _init_client(self):
+        """Initialize the appropriate client based on provider."""
+        if self._provider == "ollama":
+            self._client = openai.OpenAI(
+                api_key=self._api_key or "ollama",
+                base_url=self._base_url or settings.ollama_base_url,
+            )
+        elif self._provider == "deepseek":
+            self._client = openai.OpenAI(
+                api_key=self._api_key,
+                base_url=self._base_url or settings.deepseek_base_url,
+            )
+        else:
             self._client = openai.OpenAI(api_key=self._api_key)
 
     def is_configured(self) -> bool:

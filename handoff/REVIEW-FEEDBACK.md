@@ -1,67 +1,81 @@
-# Review Feedback — Step 3 Verification
+# Review Feedback: Step 5 — Table/Figure/Formula Parsing Support
 
-## Ready for Builder: YES
+## Ready for Builder: YES (with Minor Observations)
 
-## Verification of Fix 4: Partial Failure Handling
+## Verification Results
 
-### Expected Behavior
-- When `applied_corrections > 0` and some failed: keep temp file, move to output, return `success=False`
-- When `applied_corrections == 0`: delete temp file, return `success=False`
+### 1. TableInfo, FigureInfo, FormulaInfo dataclasses — PROPERLY DEFINED
 
-### Code Analysis (lines 111-131)
+| Dataclass | Location | Fields | Default Values |
+|-----------|----------|--------|----------------|
+| `TableInfo` | Lines 89-96 | rows, cols, caption, style | All have defaults |
+| `FigureInfo` | Lines 98-104 | width, height, caption | All have defaults |
+| `FormulaInfo` | Lines 106-112 | content, numbered, number | All have defaults |
 
+All three dataclasses are correctly defined with proper Optional types and default values.
+
+### 2. DocumentModel fields — CORRECT
+
+Lines 125-127 in `document_model.py`:
 ```python
-applied = getattr(result, 'applied_corrections', 0)
-if applied > 0:
-    # Some corrections were applied - save the document even if some failed
-    output_path = self._get_output_path(original_path)
-    shutil.move(str(temp_path), str(output_path))
-    result.output_path = output_path
-    return result
-else:
-    # No corrections applied - delete temp file
-    return result
+tables: list[TableInfo] = field(default_factory=list)
+figures: list[FigureInfo] = field(default_factory=list)
+formulas: list[FormulaInfo] = field(default_factory=list)
 ```
 
-**Confirmed correct:**
-- Checks `applied > 0` (not `result.success`)
-- Moves temp file to output path
-- Sets `result.output_path` to the moved location
-- Returns result (with `success=False` if partial failure)
+Correct use of `field(default_factory=list)` — maintains backward compatibility.
 
+### 3. DoclingDocumentParser._convert_to_document_model() Extraction
+
+| Component | Lines | Status |
+|-----------|-------|--------|
+| Tables | 124-135 | Extracts rows, cols, caption, style from `docling_doc.tables` |
+| Figures | 137-150 | Extracts width, height, caption from `docling_doc.pictures` |
+| Formulas | 152-163 | Iterates `docling_doc.iterate_items()` filtering for FormulaItem |
+
+### 4. Backward Compatibility — MAINTAINED
+
+All new fields have default empty lists via `field(default_factory=list)`. Existing code that creates `DocumentModel()` without these fields will continue to work.
+
+### 5. Must Fix Issues — NONE
+
+No blocking issues found. Implementation is functional.
+
+## Minor Observations (Non-Blocking)
+
+### 1. Formula extraction uses string type comparison (lines 155)
 ```python
-finally:
-    if temp_path.exists():
-        temp_path.unlink()
+if type(sub_item).__name__ == 'FormulaItem':
+```
+Uses `type().__name__` instead of `isinstance()`. Works but fragile if docling types change. Consider:
+```python
+from docling_core.types.doc.document import FormulaItem
+if isinstance(sub_item, FormulaItem):
 ```
 
-**Confirmed correct:**
-- Only deletes if file still exists (i.e., not already moved)
-- After `shutil.move`, the original path no longer exists, so no double-delete
+### 2. No hasattr checks for optional docling attributes
+The code assumes `doc.tables`, `doc.pictures`, and `doc.iterate_items()` exist. If docling version changes or certain document types lack these, extraction will fail silently or error. Consider adding defensive hasattr checks:
+```python
+if hasattr(docling_doc, 'tables'):
+    for table_item in docling_doc.tables:
+        ...
+```
 
-### Trace: Partial Failure Scenario
-1. 3 corrections: 2 succeed, 1 fails
-2. `_merge_with_ai_word_skill` returns: `MergeResult(success=False, applied_corrections=2, failed_corrections=[...])`
-3. `applied = 2 > 0` → takes if branch
-4. File moved to `output_path`
-5. Returns `MergeResult(success=False, output_path=corrected.docx, applied_corrections=2, failed_corrections=[...])`
-6. finally: `temp_path.exists()` is `False` (already moved) → no unlink
+### 3. caption_text() method assumption
+Lines 126 and 139 assume `caption_text` method exists:
+```python
+caption = table_item.caption_text(docling_doc) if hasattr(table_item, 'caption_text') else None
+```
+This is already guarded with hasattr — good.
 
-**Result:** Document with 2 successful corrections saved. `success=False` tells caller some corrections failed.
+### 4. Formula extraction nested loop efficiency
+Lines 153-163 have nested iteration:
+```python
+for item_tuple in docling_doc.iterate_items():
+    for sub_item in item_tuple:
+```
+This iterates all document items to find formulas. For large documents, this could be slow but is acceptable for now.
 
----
+## Conclusion
 
-## Cleared Items
-
-All 4 fixes from REVIEW-REQUEST.md are verified:
-
-1. **Fix 1** — MergeResult dataclass with `failed_corrections` tracking
-2. **Fix 2** — paragraph_index hint respected in fallback path
-3. **Fix 3** — Temp file pattern with atomic operation
-4. **Fix 4** — Partial failure handling (this verification)
-
----
-
-## No Remaining Issues
-
-Code correctly implements the intended behavior for all partial failure scenarios.
+Step 5 implementation is complete and functional. All dataclasses are properly defined, DocumentModel fields have correct defaults for backward compatibility, and extraction logic is sound. The minor observations are suggestions for defensive coding but do not block the implementation.

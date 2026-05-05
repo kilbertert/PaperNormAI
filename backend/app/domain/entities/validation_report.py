@@ -41,9 +41,8 @@ class TextLocation:
 @dataclass
 class ViolationDetail:
     """Single violation detail."""
-    id: UUID = field(default_factory=uuid4)
 
-    # Basic violation info
+    # Basic violation info (no defaults - must be provided)
     category: ViolationCategory
     severity: ViolationSeverity
     description: str                          # Violation description
@@ -55,10 +54,9 @@ class ViolationDetail:
     original_content: str                      # Original content
     suggested_fix: str                         # Suggested fix
 
-    # User edited fix (user can modify suggested_fix)
+    # Optional fields with defaults
+    id: UUID = field(default_factory=uuid4)
     user_modified_fix: Optional[str] = None
-
-    # Context (for AI-Word-Skill positioning)
     context_before: Optional[str] = None       # Paragraph before violation
     context_after: Optional[str] = None       # Paragraph after violation
 
@@ -66,11 +64,13 @@ class ViolationDetail:
 @dataclass
 class ValidationReport:
     """Complete validation report."""
-    id: UUID = field(default_factory=uuid4)
 
-    # Report metadata
+    # Report metadata (no defaults - must be provided)
     document_name: str                         # Document being validated
     template_name: Optional[str] = None       # Template/spec source name
+
+    # Optional fields with defaults
+    id: UUID = field(default_factory=uuid4)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
     # Violation list

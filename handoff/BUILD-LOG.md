@@ -5,13 +5,61 @@
 
 ## Current Status
 
-**Active step:** Phase 1 完成 — MVP 核心链路已就绪
-**Last cleared:** Step 3 — 2026-05-05
+**Active step:** Step 5 Phase 2 完成 — KG-6 表格/插图/公式解析 — 2026-05-05
+**Last cleared:** Step 5 — 2026-05-05
 **Pending deploy:** NO (local development only)
 
 ---
 
 ## Step History
+
+### Step 5 — Phase 2 表格/插图/公式解析 — COMPLETE
+*Date: 2026-05-05*
+
+Files changed:
+- `backend/app/infrastructure/docling/document_model.py` — 添加 TableInfo, FigureInfo, FormulaInfo
+- `backend/app/infrastructure/docling/parser.py` — 扩展 _convert_to_document_model()
+
+Decisions made:
+- TableInfo: rows, cols, caption, style
+- FigureInfo: width, height, caption
+- FormulaInfo: content, numbered, number
+- 所有新字段使用 field(default_factory=list) 保证向后兼容
+
+验证结果 (temp.docx):
+- Tables: 6
+- Figures: 13
+- Formulas: 20
+
+Reviewer findings: Richard Review 通过（no Must Fix issues）
+Deploy: 不适用（开发阶段）
+
+---
+
+### Step 4 — KG-1/2/3 端到端验证与 DeepSeek 集成 — COMPLETE
+*Date: 2026-05-05*
+
+Files changed:
+- `backend/app/api/endpoints/spec_validation.py` — 接入 DoclingDocumentParser + AI 服务
+- `backend/app/infrastructure/ai/openai_provider.py` — 支持 DeepSeek/ollama 多 provider
+- `backend/app/core/config.py` — 添加 DeepSeek/ollama 配置
+- `backend/app/domain/entities/validation_report.py` — 修复 dataclass 字段顺序
+- `backend/app/domain/services/semantic_validation_service.py` — 修复 AI 响应解析逻辑
+
+Decisions made:
+- DeepSeek 作为主要 AI provider（`AI_PROVIDER=deepseek`）
+- API Key: `sk-a2fb983c14e54ca68409923b6373fcb1`
+- Base URL: `https://api.deepseek.com/v1`
+- Model: `deepseek-chat`
+
+验证结果:
+- temp.docx (390段落, 59章节): 提取 17 条规则，检测到 30 处违规
+- 所有 AI 服务（RuleExtraction + SemanticValidation）正常工作
+
+Reviewer findings: KG-1/2/3 全部通过
+Deploy: 不适用（开发阶段）
+
+---
 
 ### Step 3 — AI-Word-Skill 文档修正合并 — COMPLETE
 *Date: 2026-05-05*
@@ -76,12 +124,13 @@ Deploy: 不适用（开发阶段）
 ## Known Gaps
 *Logged here instead of fixed. Addressed in a future step.*
 
-- **KG-1** — Docling DOCX 解析保真度未在实际文档上验证 — logged 2026-05-03
-- **KG-2** — DocumentUseCases 尚未接入 DoclingDocumentParser — logged 2026-05-03
-- **KG-3** — 长文档处理（>200段落）— logged 2026-05-05
-- **KG-4** — 规则和 ValidationReport 尚未持久化到数据库 — logged 2026-05-05
-- **KG-5** — AI-Word-Skill API 实际可用性待验证（repo 不可访问）— logged 2026-05-05
-- **KG-6** — Phase 2（公式/表格/插图）尚未实现 — logged 2026-05-05
+- **KG-1** — ~~Docling DOCX 解析保真度未在实际文档上验证~~ — ✅ 已验证（390段落正常），2026-05-05
+- **KG-2** — ~~DocumentUseCases 尚未接入 DoclingDocumentParser~~ — ✅ 已完成，2026-05-05
+- **KG-3** — ~~长文档处理（>200段落）~~ — ✅ 已通过（390段落正常），2026-05-05
+- **KG-4** — 规则和 ValidationReport 尚未持久化到数据库 — 待实施
+- **KG-5** — ~~AI-Word-Skill 虚假包检测~~ — ✅ 已修正，2026-05-05
+- **KG-6** — ~~Phase 2（公式/表格/插图）~~ — ✅ 已完成（Step 5），2026-05-05
+- **KG-7** — ~~Docling v2 API 错误（elements 不存在）~~ — ✅ Arch 直接重写 parser.py，2026-05-05
 
 ---
 
@@ -93,3 +142,4 @@ Deploy: 不适用（开发阶段）
 - **ADR-003** — 使用 AI-Word-Skill 实现文档修正合并 — 2026-05-03
 - **ADR-004** — MVP 分两阶段实施 — 2026-05-03
 - **ADR-005** — 规则存储采用用户级别持久化 — 2026-05-03
+- **ADR-006** — AI Provider 支持多后端（OpenAI/Ollama/DeepSeek）— 2026-05-05

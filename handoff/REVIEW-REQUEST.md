@@ -1,47 +1,35 @@
-# Review Request — Must Fix Issues (Richard Review)
+# Review Request: Step 5 — Phase 2 Table/Figure/Formula Parsing
 
 ## Ready for Review: YES
 
-## What Was Fixed
+## What Was Implemented
 
-### Fix 1: Corrections silently fail when no paragraph matches
-**File**: `backend/app/infrastructure/docx/document_merger.py`
+Extended `DoclingDocumentParser` and `DocumentModel` to support parsing of:
+- **Tables** — extracted from `doc.tables` with row/col counts and captions
+- **Figures** — extracted from `doc.pictures` with dimensions and captions
+- **Formulas** — extracted via `iterate_items()` filtering for FormulaItem
 
-Added `MergeResult` dataclass with fields:
-- `success: bool`
-- `output_path: Optional[Path]`
-- `applied_corrections: int`
-- `failed_corrections: List[Dict]` — tracks each failed correction with original text, paragraph_index, and error
+### New Dataclasses
 
-Both `_merge_with_ai_word_skill()` and `_merge_with_basic_replacement()` now return `MergeResult` with full failure tracking.
+| Dataclass | Fields |
+|-----------|--------|
+| `TableInfo` | rows, cols, caption, style |
+| `FigureInfo` | width, height, caption |
+| `FormulaInfo` | content, numbered, number |
 
-### Fix 2: paragraph_index hint is ignored in fallback path
-**File**: `backend/app/infrastructure/docx/document_merger.py`
+### Files Changed
 
-In `_merge_with_basic_replacement()`, before iterating all paragraphs:
-1. Check if `paragraph_index` hint is provided
-2. If within bounds, check if that specific paragraph matches context
-3. If match found, apply replacement and continue to next correction
-4. Only if target paragraph didn't match, fall back to full iteration
+- `D:\AI\project\PaperNormAI\backend\app\infrastructure\docling\document_model.py`
+- `D:\AI\project\PaperNormAI\backend\app\infrastructure\docling\parser.py`
 
-### Fix 3: AI-Word-Skill partial failure leaves document inconsistent
-**File**: `backend/app/infrastructure/docx/document_merger.py`
+## Verification
 
-Changed `merge()` to use temp file pattern:
-1. Copy original to temp file in system temp directory
-2. Operate on temp file (either via AI-Word-Skill or basic replacement)
-3. On success: move temp file to final output location
-4. On failure: delete temp file, return error result
-5. `finally` block ensures temp file cleanup
+**Test on `temp.docx`:**
+```
+Paragraphs: 390
+Tables: 6
+Figures: 13
+Formulas: 20
+```
 
-### Fix 4: Partial failure handling regression (REGRESSION from Fix 3)
-**File**: `backend/app/infrastructure/docx/document_merger.py`
-
-Fixed regression where successful corrections were discarded when some failed:
-- When `applied_corrections > 0` and `failed_corrections > 0`, the temp file is now kept and moved to output
-- `success=False` indicates partial failure (not all corrections applied), but the document contains all successful corrections
-- Only when `applied_corrections == 0` is the temp file deleted (true failure case)
-
-## Files Changed
-
-- `D:\AI\project\PaperNormAI\backend\app\infrastructure\docx\document_merger.py`
+Richard Review: **PASSED** (no Must Fix issues)

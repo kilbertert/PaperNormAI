@@ -6,10 +6,8 @@ Provides API endpoints for:
 """
 
 from pathlib import Path
-from typing import Optional
 import tempfile
 import hashlib
-import shutil
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
@@ -17,12 +15,9 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db, get_current_user, CurrentUser
 from app.core.config import settings
-from app.infrastructure.docx.specification_to_rules import SpecificationToRulesPipeline
-from app.infrastructure.docx.document_parser import DocumentParser
-from app.domain.services.rule_engine import RuleEngine
-from app.domain.services.template_service import TemplateService
-from app.domain.services.ai_enhancement_service import AIEnhancementService
-from app.infrastructure.persistence.template_repository import TemplateRepository
+from app.infrastructure.docling.parser import DoclingDocumentParser
+from app.domain.services.rule_extraction_service import RuleExtractionService
+from app.domain.services.semantic_validation_service import SemanticValidationService
 
 router = APIRouter()
 
@@ -89,33 +84,35 @@ async def parse_specification(
         tmp_path = Path(tmp_file.name)
 
     try:
-        pipeline = SpecificationToRulesPipeline()
-        result = pipeline.process(tmp_path)
+        # Use DoclingDocumentParser for AI-based rule extraction
+        docling_parser = DoclingDocumentParser()
+        spec_doc = docling_parser.parse(tmp_path)
+
+        # Use AI-based rule extraction service
+        rule_extraction_service = RuleExtractionService()
+        rules_dicts = rule_extraction_service.extract_rules(spec_doc)
 
         session_id = _calculate_file_hash(tmp_path)[:16]
 
         _spec_sessions[session_id] = {
             "user_id": str(current_user.id),
-            "rules": result.rules,
+            "rules_dicts": rules_dicts,  # AI-extracted rule dicts
             "spec_file": str(tmp_path),
-            "summary": result.extraction_summary,
+            "summary": {
+                "total_rules": len(rules_dicts),
+                "extraction_method": "ai",
+            },
         }
 
-        preview_rules = [
-            {
-                "id": r.id,
-                "name": r.name,
-                "level": r.level.value if hasattr(r.level, 'value') else str(r.level),
-                "description": r.description[:100],
-                "params": r.params,
-            }
-            for r in result.rules[:10]
-        ]
+        preview_rules = rules_dicts[:10]
 
         return SpecParseResponse(
             session_id=session_id,
-            rules_count=len(result.rules),
-            extraction_summary=result.extraction_summary,
+            rules_count=len(rules_dicts),
+            extraction_summary={
+                "total_rules": len(rules_dicts),
+                "extraction_method": "ai",
+            },
             preview_rules=preview_rules,
         )
 
@@ -139,7 +136,7 @@ async def get_spec_session(
 
     return {
         "session_id": session_id,
-        "rules_count": len(session["rules"]),
+        "rules_count": len(session["rules_dicts"]),
         "summary": session["summary"],
     }
 
@@ -178,44 +175,28 @@ async def validate_with_specification(
         tmp_path = Path(tmp_file.name)
 
     try:
-        parser = DocumentParser()
-        parsed_doc = parser.parse(tmp_path)
+        # Use DoclingDocumentParser for AI-based validation
+        docling_parser = DoclingDocumentParser()
+        thesis_doc = docling_parser.parse(tmp_path)
 
-        from app.domain.entities.document import Document, DocumentStatus
-        from app.domain.entities.template import Template, DegreeType
-        from uuid import UUID, uuid4
+        # Get AI-extracted rules from session (already in dict format)
+        rules_dicts = session.get("rules_dicts", [])
 
-        document = Document(
-            id=uuid4(),
-            user_id=current_user.id,
-            original_filename=document_file.filename,
-            file_path=tmp_path,
-            file_hash=_calculate_file_hash(tmp_path),
-            status=DocumentStatus.PROCESSING,
+        semantic_validator = SemanticValidationService()
+        report = semantic_validator.validate(
+            thesis_doc=thesis_doc,
+            rules=rules_dicts,
+            document_name=document_file.filename,
+            template_name="spec-based",
         )
 
-        template = Template(
-            id=uuid4(),
-            university="Specification-based",
-            degree_type=DegreeType.BACHELOR,
-            discipline="Custom",
-            version="1.0",
-            rules=[r.params for r in session["rules"]],
-        )
-
-        ai_enhancement = AIEnhancementService()
-        template_service = TemplateService()
-        rule_engine = RuleEngine(template_service, ai_enhancement)
-
-        report = rule_engine.validate(document, parsed_doc, template)
-
-        error_count = sum(1 for r in report.results if r.severity.value == "error")
-        warning_count = sum(1 for r in report.results if r.severity.value == "warning")
-        info_count = sum(1 for r in report.results if r.severity.value == "info")
+        error_count = sum(1 for v in report.violations if v.severity.value == "error")
+        warning_count = sum(1 for v in report.violations if v.severity.value == "warning")
+        info_count = sum(1 for v in report.violations if v.severity.value == "info")
 
         return SpecValidationResponse(
             session_id=session_id,
-            results_count=len(report.results),
+            results_count=len(report.violations),
             error_count=error_count,
             warning_count=warning_count,
             info_count=info_count,
