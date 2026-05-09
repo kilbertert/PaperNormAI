@@ -443,6 +443,47 @@
 - 添加 page_margin 检查（需要读取 document section 属性）
 - 配置 Alembic 数据库迁移
 
+## 2026-05-06 11:30 - 建立 Step COMPLETE 四件套对账并刷新专题知识文档
+
+**学习类型**：增量学习
+
+**触发原因**：外部工程系统闭环审计后，发现 Step 完成后的知识与进度对账缺少强制机制，且 200/300/400/600/800 仍处于蓝图叙述。
+
+**阅读范围**：
+- `handoff/BUILD-LOG.md`
+- `docs/progress.md`
+- `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`
+- `docs/knowledge/PaperNormAI-knowledge/200-database-models.md`
+- `docs/knowledge/PaperNormAI-knowledge/300-backend-kernel-services.md`
+- `docs/knowledge/PaperNormAI-knowledge/400-api-architecture.md`
+- `docs/knowledge/PaperNormAI-knowledge/600-domain-models.md`
+- `docs/knowledge/PaperNormAI-knowledge/800-cross-layer-call-chains.md`
+- 相关代码：`backend/app/api/endpoints/*`、`backend/app/domain/*`、`backend/app/infrastructure/persistence/*`
+
+**新确认的事实**：
+- Step COMPLETE 后已明确四件套强制对账：`progress`、`900`、`910`、`memory`。
+- API/领域/持久化核心链路均已代码落地，200/300/400/600/800 可切换到代码事实态。
+- `000-doc-map.md` 中旧路径与旧状态描述已修正，导航与现状对齐。
+
+**发现的空白或冲突**：
+- 仍未把 `.ai/skills` 迁移为 IDE 原生技能目录（`.trae/skills/.../SKILL.md`）。
+- 语义校验与规则引擎的双报告模型后续需要收敛策略。
+
+**更新了哪些知识文档**：
+- `handoff/BUILD-LOG.md`（新增 Step COMPLETE 四件套检查块）
+- `.ai/skills/knowledge-sync.md`（新增四件套对账步骤）
+- `docs/progress.md`（修复状态冲突）
+- `docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`（修复冲突与闭环图）
+- `docs/knowledge/PaperNormAI-knowledge/200-database-models.md`
+- `docs/knowledge/PaperNormAI-knowledge/300-backend-kernel-services.md`
+- `docs/knowledge/PaperNormAI-knowledge/400-api-architecture.md`
+- `docs/knowledge/PaperNormAI-knowledge/600-domain-models.md`
+- `docs/knowledge/PaperNormAI-knowledge/800-cross-layer-call-chains.md`
+
+**后续建议动作**：
+- 对 100/700 做同样的代码事实态复核，避免局部漂移。
+- 决策是否落地 `.trae/skills` 原生技能目录。
+
 ## 6. 与其他文档的关联
 
 - 前置文档：

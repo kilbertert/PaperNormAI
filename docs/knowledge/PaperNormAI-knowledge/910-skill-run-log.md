@@ -124,7 +124,16 @@
 
 ---
 
+## 2026-05-06 - knowledge-sync
+
+**场景**：建立 Step COMPLETE 自动对账清单并执行专题知识刷新
+**输入**：step=Step 6 后治理收口；目标=强制检查 progress + 900 + 910 + memory 四件套并修复知识漂移
+**结论**：完成 — BUILD-LOG 与 knowledge-sync skill 已加入四件套强制检查；`progress.md` 与 `000-doc-map.md` 冲突已修复；`200/300/400/600/800` 已刷新为代码事实态
+**关联**：`handoff/BUILD-LOG.md`，`.ai/skills/knowledge-sync.md`，`docs/progress.md`，`docs/knowledge/PaperNormAI-knowledge/000-doc-map.md`，`docs/knowledge/PaperNormAI-knowledge/{200,300,400,600,800}-*.md`
+
+---
+
 ## 6. 更新记录
 
 **创建时间**：2026-05-01
-**最近更新**：2026-05-06 — 补充 2026-05-05/06 真实运行记录（KG-1/2/3/4/6 全周期）
+**最近更新**：2026-05-06 — 新增 knowledge-sync 执行记录（四件套对账 + 专题文档刷新）

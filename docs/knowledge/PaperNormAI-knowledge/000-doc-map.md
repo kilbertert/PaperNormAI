@@ -129,14 +129,14 @@
 
 ## 7. 当前已知边界
 
-1. 前端（`clients/apps/web/`）尚未实现，仍为蓝图目标。
-2. `template-library/` 尚未实现。
-3. 知识文档（200-800 系列）部分内容仍为蓝图描述，未反映最新代码实现。
+1. 前端（`clients/apps/web/`）目前仅有基础骨架，业务页面与交互尚未落地。
+2. `template-library/` 仍以示例模板为主，尚未形成完整高校模板库。
+3. 历史知识文档存在阶段性漂移风险，需在每个 Step 完成后执行四件套对账。
 
 ## 8. 待确认问题
 
-1. 知识文档（200-800 系列）何时系统更新为代码事实态（通过 knowledge-sync skill 逐步完成）。
-2. 前端开发何时启动。
+1. Step 7 的优先方向：先做前端接入，还是先做 ValidationReport 深度持久化。
+2. 是否将 `.ai/skills/*.md` 进一步落地为 IDE 原生可调度技能目录。
 
 ## 10. 三套基础设施闭环
 
@@ -144,7 +144,7 @@
 Session 开始
   → 读 docs/progress.md（当前状态）
   → 读 handoff/BUILD-LOG.md（执行历史）
-  → 读 .ai/000-doc-map.md（知识状态）
+  → 读 docs/knowledge/PaperNormAI-knowledge/000-doc-map.md（知识状态）
 
 开发执行
   → handoff/ 追踪（Arch→Bob→Richard）
@@ -152,8 +152,10 @@ Session 开始
 
 Step 完成（Deploy Gate）
   → knowledge-sync skill
-      ├─ 更新 .ai/ 专题文档（200-800）
+      ├─ 更新 docs/knowledge/PaperNormAI-knowledge/ 专题文档（200-800）
       ├─ 更新 docs/progress.md
+      ├─ 写入 docs/knowledge/PaperNormAI-knowledge/900-learning-log.md
+      ├─ 写入 docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md
       └─ 写入 docs/memory/YYYY-MM-DD.md
 
 Bug 发现
@@ -163,6 +165,19 @@ Bug 发现
 下次 Session
   → 读 docs/progress.md（循环）
 ```
+
+## 12. Step COMPLETE 对账清单
+
+每次 `BUILD-LOG` 将 Step 标记为 `COMPLETE` 后，必须同步完成并人工勾选以下四件套：
+
+| 对账项 | 必须动作 | 验收标准 |
+|------|------|------|
+| `progress.md` | 更新 Active Step/Status/Next Step | 与 BUILD-LOG 最新 Step 一致 |
+| `900-learning-log.md` | 追加本次增量学习记录 | 包含触发原因、阅读范围、新事实、更新文档 |
+| `910-skill-run-log.md` | 追加 skill 运行摘要 | 至少包含场景、输入、结论、关联文件 |
+| `memory/YYYY-MM-DD.md` | 追加当日存档 | 记录今日完成、决策、卡点与下一步 |
+
+未完成四件套，不进入下一 Step。
 
 ## 11. 更新记录
 

@@ -42,6 +42,13 @@ Step 6. 写入 docs/knowledge/PaperNormAI-knowledge/900-learning-log.md
 
 Step 7. 写入 docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md
   - 追加 skill 运行记录
+
+Step 8. 执行 Step COMPLETE 四件套对账
+  - [ ] docs/progress.md 已更新
+  - [ ] docs/knowledge/PaperNormAI-knowledge/900-learning-log.md 已追加
+  - [ ] docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md 已追加
+  - [ ] docs/memory/YYYY-MM-DD.md 已追加
+  - 若任一未完成：本次 Step 不得进入下一 Step
 ```
 
 ## 输出格式
@@ -65,6 +72,7 @@ Step 7. 写入 docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md
 - 对应知识文档已从"蓝图态"更新为"代码事实态"
 - 900-learning-log.md 有新记录
 - 910-skill-run-log.md 有新记录
+- 四件套对账全部通过
 
 ## 文件映射速查表
 

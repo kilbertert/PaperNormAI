@@ -9,6 +9,25 @@
 **Last cleared:** Step 6 — 2026-05-06
 **Pending deploy:** NO (local development only)
 
+### Step COMPLETE 自动对账（强制）
+
+每次将 Step 标记为 `COMPLETE` 后，必须在同一会话完成四件套对账：
+
+1. `docs/progress.md`
+2. `docs/knowledge/PaperNormAI-knowledge/900-learning-log.md`
+3. `docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md`
+4. `docs/memory/YYYY-MM-DD.md`
+
+建议在每个 Step 末尾追加以下检查块：
+
+```markdown
+Checklist (Step COMPLETE):
+- [ ] progress.md 已更新
+- [ ] 900-learning-log.md 已追加
+- [ ] 910-skill-run-log.md 已追加
+- [ ] memory/YYYY-MM-DD.md 已追加
+```
+
 ---
 
 ## Step History
