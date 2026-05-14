@@ -443,6 +443,219 @@
 - 添加 page_margin 检查（需要读取 document section 属性）
 - 配置 Alembic 数据库迁移
 
+## 2026-05-14 12:00 - Step 8B: 前端接入（Next.js App Router）
+
+**学习类型**：流程学习
+
+**触发原因**：Step 8B-Pre ValidationReport 查询 API 完成后，开始前端接入实现。
+
+**阅读范围**：
+- `clients/apps/web/package.json`（Next.js 16.2.6）
+- `clients/packages/api-client/client.ts`（access_token key）
+- `clients/packages/types/index.ts`（类型定义）
+
+**新确认的事实**：
+- Next.js 已通过 create-next-app 创建在 clients/apps/web/
+- 纯 Client Components 模式（所有页面 'use client'）
+- 去掉了 react-query，使用 useState + useEffect
+- Token key: access_token（与 client.ts 一致）
+- API_BASE: NEXT_PUBLIC_API_BASE_URL 环境变量
+- 极简 /login 页面（POST /auth/login）
+- 三个 spec 流程页面：/spec → /spec/[sessionId] → /spec/[sessionId]/report/[reportId]
+
+**发现的空白或冲突**：
+- Vite 项目已替换为 Next.js，clients/packages/api-client 未使用（类型复制到 src/lib/types.ts）
+
+**更新了哪些知识文档**：
+- `clients/apps/web/.env.local`（NEXT_PUBLIC_API_BASE_URL）
+- `clients/apps/web/src/lib/api.ts`（API 调用）
+- `clients/apps/web/src/lib/auth.ts`（getAccessToken + useRequireAuth）
+- `clients/apps/web/src/lib/types.ts`（类型定义）
+- `clients/apps/web/src/app/login/page.tsx`（登录页）
+- `clients/apps/web/src/app/spec/page.tsx`（上传 spec）
+- `clients/apps/web/src/app/spec/[sessionId]/page.tsx`（上传 thesis）
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx`（报告展示）
+
+**后续建议动作**：
+- Step 8B 四件套对账
+- 端到端联调验证
+
+---
+
+## 2026-05-14 13:00 - P1 知识文档刷新（400/500/700/800）
+
+**学习类型**：增量学习
+
+**触发原因**：Step 8B 完成后按外部工程系统要求执行 P1 知识文档刷新，将 400/500/700/800 系列文档更新为代码事实态。
+
+**阅读范围**：
+- `docs/knowledge/PaperNormAI-knowledge/400-api-architecture.md`
+- `docs/knowledge/PaperNormAI-knowledge/500-frontend-architecture.md`
+- `docs/knowledge/PaperNormAI-knowledge/700-capability-map.md`
+- `docs/knowledge/PaperNormAI-knowledge/800-cross-layer-call-chains.md`
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx`
+
+**新确认的事实**：
+- 400-api-architecture.md：`GET /spec/reports/{report_id}` 已新增（Step 8B-Pre），返回字段完整对齐前端需求
+- 500-frontend-architecture.md：Next.js App Router 已替换 Vite，纯 Client Components，无 react-query，access_token 存 localStorage
+- 700-capability-map.md：前端 Web 界面 + ValidationReport 查询 API 均已实现
+- 800-cross-layer-call-chains.md：新增 Step 4.5/4.6/4.7 三条调用链（validate → get-report → 前端渲染）
+
+**发现的空白或冲突**：
+- 500 文档描述与代码实现不符（React Query / Vite / 蓝图阶段）
+- 800 文档 spec 链路停留在"返回违规统计"（实际已深度持久化 + 查询 API）
+
+**更新了哪些知识文档**：
+- `400-api-architecture.md` — 新增 Step 6/7 ValidationReport 持久化边界，GET /reports 端点，Section 6 新增
+- `500-frontend-architecture.md` — 全面重写为代码事实态（Next.js / 无 react-query / access_token）
+- `700-capability-map.md` — 更新待实现能力表（前端界面 + ValidationReport 查询 API）
+- `800-cross-layer-call-chains.md` — 新增 4.5/4.6/4.7 三条 spec 链路，更新层间边界观察（Step 6A 架构修复）
+
+**后续建议动作**：
+- P2 决策：进入"前端继续扩展（修正文档下载）"还是"治理重构（API → application 下沉重构）"
+
+---
+
+## 2026-05-14 07:00 - Step 8B-Pre: ValidationReport 查询 API
+
+**学习类型**：增量学习
+
+**触发原因**：Step 8B 前端接入（Next.js）立项时发现前置阻塞 — 前端需要 GET /spec/reports/{report_id} 查询违规明细，但该 API 不存在。
+
+**阅读范围**：
+- `backend/app/api/endpoints/spec_validation.py`
+- `backend/app/infrastructure/persistence/models.py`
+
+**新确认的事实**：
+- Step 7 已将 ValidationReport + ViolationDetail 持久化到数据库，但无查询 API
+- 新增 GET /api/v1/spec/reports/{report_id} 端点
+- 使用 joinedload 预加载 violations 避免 N+1 查询
+- ViolationDetailResponse 包含：id, category, severity, description, paragraph_index, text, original_content, suggested_fix, context_before, context_after, user_modified_fix
+- ValidationReportResponse 包含：report_id, session_id, document_name, template_name, created_at, total/error/warning/info_count, violations[]
+
+**发现的空白或冲突**：
+- 前端无法展示违规明细，因为 GET /spec/reports/{report_id} 不存在
+
+**更新了哪些知识文档**：
+- `backend/app/api/endpoints/spec_validation.py`（新增端点 + Response 模型）
+- `docs/progress.md`（Active Step → Step 8B-Pre，已完成）
+- `handoff/BUILD-LOG.md`（新增 Step 8B-Pre 记录）
+- `docs/knowledge/PaperNormAI-knowledge/910-skill-run-log.md`（新增 Step 8B-Pre fix-development 记录）
+
+**后续建议动作**：
+- Step 8B 前端接入（Next.js 新建项目）
+- 记录 OMA 借鉴点（可观测性/retry/多 provider 抽象）到技术债务
+
+---
+
+## 2026-05-14 06:45 - Step 8A: Governance Hardening
+
+**学习类型**：流程学习
+
+**触发原因**：Step 7 完成后 grill-me 确认的根因不是"功能缺"而是"门禁缺失"。优先修防复发机制，再做前端接入。
+
+**阅读范围**：
+- `.ai/skills/feature-readiness.md`（现有版本）
+- `.github/copilot-instructions.md`（Section 3: 分层规则）
+
+**新确认的事实**：
+- 新增 `architecture-check.md` skill：分层合规检查（4项）+ 边界合规检查（3项）+ 持久化合规检查（3项）+ 例外记录机制
+- feature-readiness.md 新增 Step 3 架构影响初筛（5项检查）：涉及跨层依赖变化、改变依赖方向、引入新外部依赖、修改持久化模型/schema、回归面超出当前范围
+- 串联关系：feature-readiness → (Yellow) → architecture-check（强制双门禁）
+- 优先级：P0 architecture-check + feature-readiness 架构初筛，P1 前端接入，P2 API→application 下沉重构
+
+**发现的空白或冲突**：
+- 之前 feature-readiness 只有技术就绪，无架构影响初筛，导致 Step 1-7 实现时无门禁拦截架构违规
+
+**更新了哪些知识文档**：
+- `.ai/skills/architecture-check.md`（新建）
+- `.ai/skills/feature-readiness.md`（新增 Step 3 + 串联关系）
+- `handoff/BUILD-LOG.md`（Step 7 COMPLETE + Step 8A 待完成）
+- `docs/progress.md`（Active Step → Step 8A）
+
+**后续建议动作**：
+- Step 8A 四件套对账
+- Step 8B 前端接入
+
+---
+
+## 2026-05-14 06:05 - Step 7: ValidationReport 深度持久化
+
+**学习类型**：增量学习
+
+**触发原因**：Step 6A 架构修复完成后，验证后端核心链路收敛性。选择 ValidationReport 深度持久化作为 Step 7 方向，原因：刚修完架构边界，最应该验证后端核心链路。
+
+**阅读范围**：
+- `backend/app/domain/entities/validation_report.py`
+- `backend/app/infrastructure/persistence/models.py`
+- `backend/app/api/endpoints/spec_validation.py`
+- `handoff/ARCHITECT-BRIEF.md`（Step 7 Definition of Done）
+
+**新确认的事实**：
+- ValidationReport 领域实体已存在（含 violations 列表、_recalc_stats()）
+- ViolationDetail 领域实体已存在（含 category/severity/description/location/suggested_fix）
+- Spec 语义校验端点 `POST /spec/validate-with-spec` 当前仅返回计数
+- 新增 ValidationReportModel + ViolationDetailModel 到 models.py
+- SpecValidationResponse 追加 report_id 字段
+- 同步落库在 API 编排层完成（spec_validation.py），Domain Service 仅产出 ValidationReport
+- Architecture gate: feature-readiness ✅ Green, architecture-check 🟡 Yellow（MVP 例外）
+
+**发现的空白或冲突**：
+- 数据库迁移路径尚未定义（Alembic 未建立），MVP 阶段使用 create_all()
+- API 层继续承担编排是 MVP 务实落点，后续需下沉到 application 层
+
+**更新了哪些知识文档**：
+- `handoff/ARCHITECT-BRIEF.md`（Step 7 Definition of Done + MVP 例外记录）
+- `handoff/BUILD-LOG.md`（Step 6A + Step 7 待立项）
+- `docs/progress.md`（Active Step → Step 7）
+
+**后续建议动作**：
+- Step 7 完成并通过四件套对账后，考虑前端接入
+- application 层下沉重构作为未来工作项记录
+
+---
+
+## 2026-05-14 05:25 - Step 6A: Architecture Repair — 清除 domain → infrastructure 直接依赖
+
+**学习类型**：增量学习
+
+**触发原因**：grill-me 审查发现当前代码库存在系统性架构违规 — domain 层直接依赖 infrastructure 层（9 处违规 / 7 个 service 文件），违反 `api → application → domain → infrastructure` 分层约束。这些违规在实现时未被 skill 机制拦截，导致架构腐化已扩散。
+
+**阅读范围**：
+- `backend/app/domain/services/semantic_validation_service.py`
+- `backend/app/domain/services/rule_extraction_service.py`
+- `backend/app/domain/services/correction_service.py`
+- `backend/app/domain/services/rule_engine.py`
+- `backend/app/domain/services/correction_executor.py`
+- `backend/app/domain/services/ai_enhancement_service.py`
+- `backend/app/domain/services/template_service.py`
+- `.github/copilot-instructions.md`（Section 3.1 分层规则）
+- `docs/progress.md`、`handoff/BUILD-LOG.md`
+
+**新确认的事实**：
+- 确认 9 处违规分布：semantic_validation_service（2处）、rule_extraction_service（2处）、correction_service（1处）、rule_engine（1处）、correction_executor（2处）、ai_enhancement_service（1处）
+- 违规类型：AI Provider 泄露（4处）、Docling 模型泄露（2处）、Docx Parser 模型泄露（3处）
+- template_service.py ✅ 无违规（仅依赖 domain.entities 和 domain.repositories）
+- 修复模式：domain 定义抽象接口（Protocol），application 层负责注入具体实现
+- 新增 `domain/services/interfaces.py`：定义 `IAIProvider`、`IDocumentParser`、`IDocumentMerger`、`IDocumentWriter`、`IParsedDocument`、`ElementLike`
+- 修复后 spec_validation.py 中的 wiring 已验证通过（RuleExtractionService + SemanticValidationService 可正确实例化）
+
+**发现的空白或冲突**：
+- feature-readiness.md 只检查"能不能开始做"，从未覆盖架构合规检查
+- 流程上错误地把 readiness 当成了"架构安全检查"的替代品
+- 问题根因在两层：skill 设计层（feature-readiness 缺维度）+ 流程门禁层（无强制架构检查）
+
+**更新了哪些知识文档**：
+- `handoff/ARCHITECT-BRIEF.md`（Step 6A 架构修复输入文档）
+- `docs/progress.md`（Active Step → Step 6A）
+
+**后续建议动作**：
+- 完成四件套对账：900-learning-log.md（本条）+ 910-skill-run-log.md + memory/YYYY-MM-DD.md
+- 刷新 300/600/800 知识文档为代码事实态（interfaces.py 新增 + 分层收敛）
+- Step 7 立项前需重新完成 feature-readiness + architecture-check 双门禁
+
+---
+
 ## 2026-05-06 11:30 - 建立 Step COMPLETE 四件套对账并刷新专题知识文档
 
 **学习类型**：增量学习
@@ -508,13 +721,13 @@
 
 ## 9. 更新记录
 
-**最近复核时间**：2026-05-01
+**最近复核时间**：2026-05-14
 
 **复核依据**：
-- 代码范围：当前知识库目录与相关治理 / 蓝图文档
+- 代码范围：Step 8B 前端接入（Next.js App Router）
 - 参考文档：
-  - `.ai/agents/PaperNormAI-knowledge-builder.agent.md`
-  - `docs/knowledge/PaperNormAI-knowledge/010-knowledge-governance.md`
+  - `clients/apps/web/src/lib/api.ts`
+  - `clients/apps/web/src/app/`
 
 **当前可信度**：高
 

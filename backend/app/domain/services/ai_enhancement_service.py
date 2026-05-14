@@ -1,16 +1,23 @@
 """AI Enhancement domain service."""
 
-from typing import Optional
-from app.infrastructure.ai.openai_provider import OpenAIProvider
+from typing import Optional, Protocol
 from app.domain.entities.validation_result import ValidationResult, Severity
+
+
+class IAIProvider(Protocol):
+    """Abstract interface for AI providers."""
+
+    def is_configured(self) -> bool: ...
+    def analyze_citation(self, citation_text: str) -> dict: ...
+    def analyze_reference(self, reference_text: str) -> dict: ...
 
 
 class AIEnhancementService:
     """Domain service for AI-enhanced validations (L3 rules)."""
 
-    def __init__(self, openai_provider: Optional[OpenAIProvider] = None):
+    def __init__(self, ai_provider: Optional[IAIProvider] = None):
         self._enabled = False
-        self._provider = openai_provider or OpenAIProvider()
+        self._provider = ai_provider
 
     def enable(self) -> None:
         """Enable AI enhancement."""
@@ -26,7 +33,7 @@ class AIEnhancementService:
 
     def is_available(self) -> bool:
         """Check if AI provider is configured and available."""
-        return self._provider.is_configured()
+        return self._provider is not None and self._provider.is_configured()
 
     def analyze_citation_format(self, citation_text: str) -> dict:
         """Analyze citation format for compliance.
@@ -36,7 +43,7 @@ class AIEnhancementService:
             - confidence: float
             - suggestions: list[str]
         """
-        if not self._provider.is_configured():
+        if self._provider is None or not self._provider.is_configured():
             return {
                 "is_valid": False,
                 "confidence": 0.0,
@@ -53,7 +60,7 @@ class AIEnhancementService:
             - confidence: float
             - suggestions: list[str]
         """
-        if not self._provider.is_configured():
+        if self._provider is None or not self._provider.is_configured():
             return {
                 "is_valid": False,
                 "confidence": 0.0,

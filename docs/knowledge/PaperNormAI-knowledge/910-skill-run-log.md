@@ -124,6 +124,56 @@
 
 ---
 
+## 2026-05-14 - feature-readiness (Step 7)
+
+**场景**：评估 ValidationReport 深度持久化就绪条件
+**输入**：feature=Step 7 ValidationReport 深度持久化
+**结论**：Green — 知识文档足够、接口变化极小（仅增加 report_id 字段）、回归面清晰有限、持久化职责明确
+**关联**：`backend/app/infrastructure/persistence/models.py`、`backend/app/api/endpoints/spec_validation.py`
+
+---
+
+## 2026-05-14 - architecture-check (Step 7)
+
+**场景**：评估 ValidationReport 深度持久化架构合规性
+**输入**：feature=Step 7，架构门禁检查
+**结论**：Yellow — 不会新增 domain→infrastructure 违规，但会继续沿用 API→infrastructure repository 的务实捷径；记录为 MVP 例外
+**关联**：`backend/app/api/endpoints/spec_validation.py`（API 层直接调用 repository）
+
+---
+
+## 2026-05-14 - governance-hardening (Step 8A)
+
+**场景**：Step 8A — 新建 architecture-check skill + 修改 feature-readiness 架构初筛
+**输入**：feature=Step 8A Governance Hardening
+**结论**：完成 — 新建 `.ai/skills/architecture-check.md`（分层/边界/持久化合规检查 + 例外机制）；修改 `.ai/skills/feature-readiness.md`（新增 Step 3 架构影响初筛 5 项 + 双门禁串联）
+**关联**：`.ai/skills/architecture-check.md`、`.ai/skills/feature-readiness.md`、`handoff/BUILD-LOG.md`、`docs/progress.md`
+
+---
+
+## 2026-05-14 - architecture-repair (Step 6A)
+
+**场景**：清除 domain → infrastructure 直接依赖（系统架构违规修复）
+**输入**：feature=Architecture Repair — 9处违规 / 7个service文件
+**结论**：完成 — 6个service文件全部重构为依赖注入模式；新增 domain/services/interfaces.py；所有domain service不再直接import infrastructure
+**关联**：`backend/app/domain/services/semantic_validation_service.py`、`backend/app/domain/services/rule_extraction_service.py`、`backend/app/domain/services/rule_engine.py`、`backend/app/domain/services/correction_service.py`、`backend/app/domain/services/correction_executor.py`、`backend/app/domain/services/ai_enhancement_service.py`、`backend/app/domain/services/interfaces.py`、`backend/app/api/endpoints/spec_validation.py`
+
+---
+
+## 2026-05-14 - feature-development (Step 8B)
+
+**场景**：Step 8B 前端接入 — Next.js App Router 实现
+**输入**：feature=Step 8B 前端接入
+**结论**：完成 — 替换 Vite 为 Next.js，实现极简登录 + spec/thesis 上传 + 报告展示
+**关联**：`clients/apps/web/`（Next.js 项目）、`clients/apps/web/src/app/login/page.tsx`、`clients/apps/web/src/app/spec/`、`clients/apps/web/src/lib/`
+
+**场景**：Step 8B 前端接入阻塞解除 — 新增 ValidationReport 查询 API
+**输入**：feature=GET /spec/reports/{report_id}
+**结论**：完成 — 新增 GET /api/v1/spec/reports/{report_id}，返回完整 ValidationReport + ViolationDetail[]
+**关联**：`backend/app/api/endpoints/spec_validation.py`
+
+---
+
 ## 2026-05-06 - knowledge-sync
 
 **场景**：建立 Step COMPLETE 自动对账清单并执行专题知识刷新
@@ -136,4 +186,4 @@
 ## 6. 更新记录
 
 **创建时间**：2026-05-01
-**最近更新**：2026-05-06 — 新增 knowledge-sync 执行记录（四件套对账 + 专题文档刷新）
+**最近更新**：2026-05-14 — 新增 Step 8B-Pre fix-development 记录 + GET /reports API

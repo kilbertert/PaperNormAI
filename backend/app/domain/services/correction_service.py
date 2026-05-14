@@ -4,11 +4,19 @@ Applies user-confirmed corrections from ValidationReport to documents.
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Protocol
 from uuid import UUID
 
 from app.domain.entities.validation_report import ValidationReport, ViolationDetail
-from app.infrastructure.docx.document_merger import DocumentMerger
+
+
+class IDocumentMerger(Protocol):
+    """Abstract interface for document merging/correction."""
+
+    def merge(self, original_doc_path: Path, corrections: List[Dict]) -> Path: ...
+
+    @property
+    def using_ai_word_skill(self) -> bool: ...
 
 
 class CorrectionService:
@@ -18,14 +26,14 @@ class CorrectionService:
     the corrections to the original document.
     """
 
-    def __init__(self, merger: Optional[DocumentMerger] = None, output_dir: Optional[Path] = None):
+    def __init__(self, merger: Optional[IDocumentMerger] = None, output_dir: Optional[Path] = None):
         """Initialize CorrectionService.
 
         Args:
             merger: DocumentMerger instance. Creates default if not provided.
             output_dir: Directory for corrected documents. Uses original dir if not provided.
         """
-        self._merger = merger or DocumentMerger(output_dir=output_dir)
+        self._merger = merger
         self._output_dir = output_dir
 
     def apply_corrections(
@@ -141,4 +149,4 @@ class CorrectionService:
     @property
     def using_ai_word_skill(self) -> bool:
         """Returns True if the underlying merger uses AI-Word-Skill."""
-        return self._merger.using_ai_word_skill
+        return self._merger is not None and self._merger.using_ai_word_skill

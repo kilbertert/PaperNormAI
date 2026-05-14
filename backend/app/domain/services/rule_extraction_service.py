@@ -1,8 +1,19 @@
 """Rule extraction service for extracting semantic rules from specification documents."""
 
-from typing import List, Dict, Optional
-from app.infrastructure.docling.document_model import DocumentModel
-from app.infrastructure.ai.openai_provider import OpenAIProvider
+from typing import List, Dict, Optional, Protocol
+
+
+class IDocumentParser(Protocol):
+    """Abstract interface for document parsing."""
+
+    def get_text_content(self) -> str: ...
+
+
+class IAIProvider(Protocol):
+    """Abstract interface for AI providers."""
+
+    def is_configured(self) -> bool: ...
+    def _call_ai(self, prompt: str) -> Optional[str]: ...
 
 
 class RuleExtractionService:
@@ -59,10 +70,11 @@ class RuleExtractionService:
 {content}
 """
 
-    def __init__(self, openai_provider: Optional[OpenAIProvider] = None):
-        self._provider = openai_provider or OpenAIProvider()
+    def __init__(self, document_parser: Optional[IDocumentParser] = None, ai_provider: Optional[IAIProvider] = None):
+        self._parser = document_parser
+        self._provider = ai_provider
 
-    def extract_rules(self, spec_doc: DocumentModel) -> List[Dict[str, str]]:
+    def extract_rules(self, spec_doc: "DocumentModelLike") -> List[Dict[str, str]]:
         """Extract semantic rules from a specification document.
 
         Args:

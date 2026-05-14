@@ -44,9 +44,10 @@
 
 | 能力 | 状态 | 说明 |
 |------|------|------|
-| 前端 Web 界面 | 未实现 | Git-diff 报告展示、用户编辑 |
+| 前端 Web 界面 | ✅ 已实现（Step 8B） | Next.js App Router，/spec → /spec/[sessionId] → /spec/[sessionId]/report/[reportId] |
 | corrected.docx 下载 API | 未实现 | 需要前端配合 |
-| ValidationReport 完整持久化 | 未实现 | 当前仅返回计数 |
+| ValidationReport 完整持久化 | ✅ 已实现（Step 7） | ValidationReportModel + ViolationDetailModel |
+| ValidationReport 查询 API | ✅ 已实现（Step 8B-Pre） | GET /spec/reports/{report_id} |
 | template-library | 未实现 | Fallback 机制 |
 
 ## 6. 明确后置的能力
@@ -74,11 +75,11 @@
 
 ## 8. 更新记录
 
-**最近复核时间**：2026-05-06
+**最近复核时间**：2026-05-14
 
-**重要变更（2026-05-06）：**
-- Phase 1 和 Phase 2 全部完成，更新为代码事实态
-- 删除"蓝图已定义，未落代码"描述
-- 添加 AI 工程协作能力地图（skill 已可执行）
+**重要变更（2026-05-14）：**
+- Step 8B 前端 Web 界面已完成（Next.js App Router）
+- Step 7 ValidationReport 深度持久化已完成
+- Step 8B-Pre ValidationReport 查询 API 已完成
 
 **当前可信度**：高

@@ -6,16 +6,62 @@ L2 rules are pattern-based (heading levels, citation patterns).
 L3 rules require AI enhancement (complex citation/reference validation).
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Protocol
 from uuid import UUID
 
 from app.domain.entities.document import Document
 from app.domain.entities.template import Template
 from app.domain.entities.validation_result import ValidationReport, ValidationResult, Severity
 from app.domain.entities.validation_rule import RuleLevel, ValidationRule
-from app.infrastructure.docx.document_parser import ParsedDocument, DocumentElement
 from app.domain.services.template_service import TemplateService
 from app.domain.services.ai_enhancement_service import AIEnhancementService
+
+
+class IParsedDocument(Protocol):
+    """Abstract interface for parsed document model."""
+
+    elements: List["ElementLike"]
+
+
+class ElementLike(Protocol):
+    """Abstract interface for document element."""
+
+    @property
+    def element_type(self) -> str: ...
+
+    @property
+    def content(self) -> str: ...
+
+    @property
+    def path(self) -> str: ...
+
+    @property
+    def style(self) -> Optional[str]: ...
+
+    @property
+    def properties(self) -> "ElementPropertiesLike": ...
+
+
+class ElementPropertiesLike(Protocol):
+    """Abstract interface for element properties."""
+
+    @property
+    def font_name(self) -> Optional[str]: ...
+
+    @property
+    def font_size(self) -> Optional[int]: ...
+
+    @property
+    def line_spacing(self) -> Optional[float]: ...
+
+    @property
+    def line_spacing_rule(self) -> Optional[str]: ...
+
+    @property
+    def paragraph_spacing_before(self) -> Optional[float]: ...
+
+    @property
+    def paragraph_spacing_after(self) -> Optional[float]: ...
 
 
 class RuleEngine:
@@ -46,7 +92,7 @@ class RuleEngine:
     def validate(
         self,
         document: Document,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         template: Template,
     ) -> ValidationReport:
         """Validate a parsed document against a template.
@@ -79,7 +125,7 @@ class RuleEngine:
 
     def _validate_rule(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Execute a deterministic (L1/L2) rule."""
@@ -105,7 +151,7 @@ class RuleEngine:
 
     def _check_font_name_body(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
         """Check body font name matches expected value."""
@@ -133,7 +179,7 @@ class RuleEngine:
 
     def _check_font_name_heading(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
         """Check heading font name matches expected value."""
@@ -161,7 +207,7 @@ class RuleEngine:
 
     def _check_font_size_body(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
         """Check body font size matches expected value."""
@@ -192,7 +238,7 @@ class RuleEngine:
 
     def _check_line_spacing(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
         """Check line spacing matches expected value.
@@ -247,7 +293,7 @@ class RuleEngine:
 
     def _check_paragraph_spacing(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
         """Check paragraph spacing matches expected values."""
@@ -293,7 +339,7 @@ class RuleEngine:
 
     def _check_page_margin(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> Optional[ValidationResult]:
         """Check page margins against expected values.
@@ -386,7 +432,7 @@ class RuleEngine:
 
     def _check_heading_level(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Check heading levels are sequential (no level jumping).
@@ -469,7 +515,7 @@ class RuleEngine:
 
     def _check_citation_format_pattern(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Check citation format matches expected pattern (L2 rule).
@@ -489,7 +535,7 @@ class RuleEngine:
 
     def _check_academic_citation_pattern(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Check academic citation patterns: (Author, Year) or [Author, Year]."""
@@ -520,7 +566,7 @@ class RuleEngine:
 
     def _check_numeric_citation_pattern(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Check numeric citation patterns: [1] or [1, 2] or [1-3]."""
@@ -566,7 +612,7 @@ class RuleEngine:
 
     def _check_generic_rule(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Generic rule checker for unknown rule IDs."""
@@ -596,7 +642,7 @@ class RuleEngine:
 
     def _get_element_property(
         self,
-        element: DocumentElement,
+        element: ElementLike,
         rule_id: str,
     ) -> Any:
         """Get element property based on rule ID."""
@@ -610,7 +656,7 @@ class RuleEngine:
 
     def _validate_with_ai(
         self,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         rule: ValidationRule,
     ) -> List[ValidationResult]:
         """Execute an AI-enhanced (L3) rule."""

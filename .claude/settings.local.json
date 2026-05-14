@@ -34,7 +34,24 @@
       "Bash(python *)",
       "Bash(ollama signin *)",
       "Bash(where ollama *)",
-      "Bash(dir /b *.docx)"
+      "Bash(dir /b *.docx)",
+      "Bash(git *)",
+      "Bash(rtk pytest *)",
+      "Bash(rtk npx *)",
+      "Bash(rtk npm *)",
+      "Bash(uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s http://localhost:8000/docs)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(sqlite3 paper_norm_ai.db \"SELECT email FROM users LIMIT 5;\")",
+      "Bash(sqlite3 paper_norm_ai.db \".tables\")",
+      "Bash(sqlite3 paper_norm_ai.db \"SELECT id, email FROM users;\")",
+      "Bash(taskkill /F /IM python.exe /T)",
+      "Bash(taskkill *)",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"demo@paper.com\",\"password\":\"demo123456\"}')",
+      "Bash(curl -s \"http://localhost:3000/spec/aae6cdb61621143f/report/5c734811-395b-4a73-b5db-00ab85d2f8d0\")",
+      "Bash(DEEPSEEK_API_KEY=sk-8c80bab85c3f4116aa58122a7a629ce2 AI_PROVIDER=deepseek python -c ' *)",
+      "Bash(DEEPSEEK_API_KEY=\"sk-8c80bab85c3f4116aa58122a7a629ce2\" AI_PROVIDER=\"deepseek\" uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(rtk wc *)"
     ]
   }
 }

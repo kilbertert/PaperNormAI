@@ -5,9 +5,18 @@
 
 ## Current Status
 
-**Active step:** Step 6 KG-4 完成 — 规则持久化 — 2026-05-06
-**Last cleared:** Step 6 — 2026-05-06
+**Active step:** Step 8A — Governance Hardening（architecture-check skill + feature-readiness 架构初筛）
+**Last cleared:** Step 7 — 2026-05-14
 **Pending deploy:** NO (local development only)
+
+### Architecture Gate（Step 7 收口）
+
+| 门禁 | 结果 | 说明 |
+|------|------|------|
+| feature-readiness | ✅ Green | 知识文档足够、接口变化极小、回归面清晰 |
+| architecture-check | 🟡 Yellow | API 层直接调用 repository — **MVP 例外**，已记录 |
+
+**MVP 例外条件**：允许 `spec_validation.py` 继续承担编排，直接调用持久化仓储；后续需下沉到 `application/` 层。
 
 ### Step COMPLETE 自动对账（强制）
 
@@ -31,6 +40,132 @@ Checklist (Step COMPLETE):
 ---
 
 ## Step History
+
+### Step 6A — Architecture Repair: Remove domain -> infrastructure dependencies — COMPLETE
+*Date: 2026-05-14*
+
+Files changed:
+- `backend/app/domain/services/interfaces.py` — 新建：IAIProvider, IDocumentParser, IDocumentMerger, IDocumentWriter, IParsedDocument, ElementLike
+- `backend/app/domain/services/ai_enhancement_service.py` — OpenAIProvider → IAIProvider
+- `backend/app/domain/services/semantic_validation_service.py` — DocumentModel + OpenAIProvider → IDocumentParser + IAIProvider
+- `backend/app/domain/services/rule_extraction_service.py` — DocumentModel + OpenAIProvider → IDocumentParser + IAIProvider
+- `backend/app/domain/services/rule_engine.py` — ParsedDocument + DocumentElement → IParsedDocument + ElementLike
+- `backend/app/domain/services/correction_executor.py` — ParsedDocument + DocumentWriter → IParsedDocument + IDocumentWriter
+- `backend/app/domain/services/correction_service.py` — DocumentMerger → IDocumentMerger
+- `backend/app/api/endpoints/spec_validation.py` — application 层注入具体实现
+
+Decisions made:
+- domain 层不再直接 import infrastructure，所有依赖通过 constructor 注入
+- 新增 `domain/services/interfaces.py` 作为抽象接口定义文件
+- `template_service.py` ✅ 无违规，保持不变
+
+Validation results:
+- ✅ domain/services/ 下不再有 app.infrastructure 直接 import
+- ✅ 所有 domain service 公开方法签名不变
+- ✅ Python 语法检查通过
+- ✅ 模块级 import 验证通过
+- ✅ spec_validation.py wiring 验证通过
+- ✅ RuleEngine.validate 接受真实 ParsedDocument 验证通过
+
+Deploy: 不适用（架构修复）
+
+---
+
+### Step 7 — ValidationReport 深度持久化 — COMPLETE
+*Date: 2026-05-14*
+
+Files changed:
+- `backend/app/infrastructure/persistence/models.py` — 新增 ValidationReportModel + ViolationDetailModel（full UUID，字段 String(36)）
+- `backend/app/api/endpoints/spec_validation.py` — 响应追加 report_id + 同步落库逻辑
+
+Decisions made:
+- 使用领域对象已有 UUID（report.id / v.id），不生成新 ID
+- API 编排层负责持久化，Domain Service 仅产出 ValidationReport
+- Architecture gate: feature-readiness ✅ Green, architecture-check 🟡 Yellow（MVP 例外：API 层直接调用 repository）
+
+Validation results:
+- ✅ ValidationReportModel + ViolationDetailModel 导入正常
+- ✅ SpecValidationResponse 包含 report_id 字段
+- ✅ 实际数据库写入/读取验证通过（主记录统计与明细数量一致）
+- ✅ 无新增 domain → infrastructure 违规
+
+Deploy: 不适用（开发阶段）
+
+---
+
+### Step 8A — Governance Hardening — COMPLETE
+*Date: 2026-05-14*
+
+Files changed:
+- `.ai/skills/architecture-check.md` — 新建 architecture-check skill
+- `.ai/skills/feature-readiness.md` — 新增 Step 3 架构影响初筛（5项检查）
+
+Decisions made:
+- P0: architecture-check skill 新建，强制门禁防止架构腐化复发
+- P0: feature-readiness 增加架构影响初筛，触发 architecture-check 双门禁
+- P1: 前端接入（暂缓）
+- P2: API → application 下沉重构（单独立项，不夹带）
+
+Validation results:
+- ✅ architecture-check skill 门禁逻辑完整
+- ✅ feature-readiness 串联 architecture-check 双门禁
+- ✅ MVP 例外机制已记录
+
+Deploy: 不适用（开发阶段）
+
+---
+
+### Step 8B-Pre — ValidationReport 查询 API — COMPLETE
+*Date: 2026-05-14*
+
+Files changed:
+- `backend/app/api/endpoints/spec_validation.py` — 新增 GET /reports/{report_id}
+
+Decisions made:
+- 前端展示 ValidationReport 统计 + 违规明细，需要先有查询 API
+- 新增 ViolationDetailResponse + ValidationReportResponse Pydantic 模型
+- 使用 joinedload 预加载 violations 避免 N+1 查询
+- 权限验证：通过 spec session 关联验证用户所有权
+
+Validation results:
+- ✅ Python import 检查通过
+- ✅ 返回字段与前端需求对齐（report_id, session_id, document_name, template_name, created_at, total/error/warning/info_count, violations[]）
+
+Deploy: 不适用（开发阶段）
+
+---
+
+### Step 8B — 前端接入（Next.js App Router）— COMPLETE
+*Date: 2026-05-14*
+
+Files changed:
+- `clients/apps/web/` — 替换 Vite 为 Next.js App Router（无 react-query）
+- `clients/apps/web/.env.local` — 新增 NEXT_PUBLIC_API_BASE_URL
+- `clients/apps/web/src/lib/api.ts` — API 调用函数
+- `clients/apps/web/src/lib/auth.ts` — 客户端守卫 getAccessToken + useRequireAuth
+- `clients/apps/web/src/lib/types.ts` — 类型定义（从 api-client/types 复制）
+- `clients/apps/web/src/app/login/page.tsx` — 极简登录页
+- `clients/apps/web/src/app/spec/page.tsx` — Step 1: 上传 spec
+- `clients/apps/web/src/app/spec/[sessionId]/page.tsx` — Step 2: 上传 thesis
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx` — Step 3: 展示报告
+
+Decisions made:
+- 纯 Client Components（所有页面 'use client'）
+- Token key: access_token（与 client.ts 一致）
+- NEXT_PUBLIC_API_BASE_URL 环境变量直接请求后端
+- 去掉 react-query（useState + useEffect）
+- 先清目录再创建 Next.js
+
+Validation results:
+- ✅ npm run build 成功
+- ✅ 6 个页面全部正确生成（/, /login, /spec, /spec/[sessionId], /spec/[sessionId]/report/[reportId]）
+- ✅ TypeScript 检查通过
+
+Deploy: 不适用（开发阶段）
+
+---
+
+### Step 8B — 前端接入（Next.js）（待立项）
 
 ### Step 6 — KG-4 规则持久化 — COMPLETE
 *Date: 2026-05-06*

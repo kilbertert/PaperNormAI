@@ -58,6 +58,7 @@
 - `POST /spec/parse-spec`
 - `GET /spec/spec-sessions/{session_id}`
 - `POST /spec/validate-with-spec`
+- `GET /spec/reports/{report_id}` — **2026-05-14 新增**，返回完整 ValidationReport + ViolationDetail[]
 - `DELETE /spec/spec-sessions/{session_id}`
 
 ## 5. 鉴权与权限边界
@@ -66,31 +67,42 @@
 2. 用户访问文档、任务、规则会话时，均做 `user_id` 级别所有权校验。  
 3. `get_optional_current_user` 已提供，但主要端点目前仍以强认证为主。
 
-## 6. 当前已知边界
+## 6. ValidationReport 持久化边界（Step 7 + Step 8B-Pre）
+
+1. `POST /spec/validate-with-spec` 同步落库 `ValidationReportModel` + `ViolationDetailModel[]`。  
+2. `GET /spec/reports/{report_id}` 查询完整报告（joinedload violations），返回字段：  
+   - `report_id, session_id, document_name, template_name, created_at`  
+   - `total_count, error_count, warning_count, info_count`  
+   - `violations[]`（含 `id, category, severity, description, paragraph_index, text, original_content, suggested_fix, context_before, context_after, user_modified_fix`）  
+3. 权限验证：report 关联 spec_session 的 user_id 与当前用户一致。
+
+## 7. 当前已知边界
 
 1. API 层部分端点仍承担较多编排逻辑（可继续下沉到 application/use case 层）。  
 2. 返回模型以 Pydantic 手工组装为主，尚未统一响应封装中间层。  
 3. 实时进度目前依赖轮询（`GET /validations/{job_id}`、`GET /corrections/{job_id}`），未使用 WebSocket。
 
-## 7. 与其他文档的关联
+## 8. 与其他文档的关联
 
-- 前置文档：`100-system-overview.md`  
+- 前置文档：`100-system-overview.md`
 - 相关文档：`200-database-models.md`、`300-backend-kernel-services.md`、`800-cross-layer-call-chains.md`
 
-## 8. 待确认问题
+## 9. 待确认问题
 
-1. 是否在下一阶段引入统一 API 错误码与响应 Envelope。  
-2. 是否把端点内部编排进一步迁移到 application 层。  
+1. 是否在下一阶段引入统一 API 错误码与响应 Envelope。
+2. 是否把端点内部编排进一步迁移到 application 层。
 3. 是否引入 WebSocket/SSE 以替代高频轮询。
 
-## 9. 更新记录
+## 10. 更新记录
 
-**最近复核时间**：2026-05-06  
+**最近复核时间**：2026-05-14
 **复核依据**：
 - `backend/app/api/routes.py`
 - `backend/app/api/dependencies.py`
 - `backend/app/api/endpoints/auth.py`
 - `backend/app/api/endpoints/documents.py`
+- `backend/app/api/endpoints/spec_validation.py`（GET /spec/reports/{report_id} 新增）
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx`（Step 8B 前端展示）
 - `backend/app/api/endpoints/templates.py`
 - `backend/app/api/endpoints/validations.py`
 - `backend/app/api/endpoints/corrections.py`

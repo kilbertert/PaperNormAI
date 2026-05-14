@@ -58,26 +58,72 @@ POST /corrections/
       -> job.output_path + status 更新
 ```
 
-### 4.4 Spec 语义校验
+### 4.4 Spec 语义校验（Step 1: parse-spec）
 
 ```text
 POST /spec/parse-spec
   -> DoclingDocumentParser.parse
   -> RuleExtractionService.extract_rules
   -> SpecSessionRepository.save
+  -> 返回 session_id, rules_count
+```
 
+### 4.5 Spec 语义校验（Step 2: validate-with-spec）
+
+```text
 POST /spec/validate-with-spec
   -> SpecSessionRepository.find
   -> DoclingDocumentParser.parse
   -> SemanticValidationService.validate
-  -> 返回违规统计
+  -> ValidationReportModel + ViolationDetailModel[] 同步落库
+  -> 返回 report_id + 统计（total/error/warning/info_count）
+```
+
+### 4.6 Spec 语义校验（Step 3: get-report）
+
+```text
+GET /spec/reports/{report_id}
+  -> ValidationReportModel + joinedload violations
+  -> 校验 user_id 所有权
+  -> 返回完整 ValidationReportResponse（含 violations[]）
+```
+
+### 4.7 前端完整用户流程
+
+```text
+浏览器 POST /auth/login
+  -> 返回 access_token
+  -> localStorage.setItem('access_token', token)
+
+浏览器 POST /spec/parse-spec（携带 Bearer token）
+  -> DoclingDocumentParser.parse
+  -> RuleExtractionService.extract_rules
+  -> SpecSessionRepository.save
+  -> 返回 { session_id, rules_count }
+
+浏览器 POST /spec/validate-with-spec（携带 Bearer token）
+  -> SpecSessionRepository.find
+  -> DoclingDocumentParser.parse
+  -> SemanticValidationService.validate
+  -> ValidationReportModel + ViolationDetailModel[] 落库
+  -> 返回 { report_id, total_count, error_count, ... }
+
+浏览器 GET /spec/reports/{report_id}（携带 Bearer token）
+  -> ValidationReportModel + joinedload violations
+  -> 返回 { report_id, session_id, total_count, violations[], ... }
+
+前端渲染：
+  -> 四格统计卡片（total/error/warning/info）
+  -> violations[] 遍历展示（severity + category + description + original/suggested）
 ```
 
 ## 5. 层间边界观察
 
-1. API 层已承担部分业务编排（务实可用，但后续可下沉）。  
-2. Domain service 负责规则与修正核心逻辑，Infrastructure 负责解析/存储/AI 调用。  
-3. Repository 作为领域与 ORM 的桥接层已稳定使用。
+1. 前端纯 Client Components，`/spec` 链路无 SSR。
+2. API 层承担编排（务实捷径），后续可下沉到 application 层。
+3. Domain service 负责规则判定与修正策略，Infrastructure 负责解析/存储/AI 调用。
+4. Repository 作为领域与 ORM 的桥接层已稳定使用。
+5. Step 6A 修复后，domain 层不再直接依赖 infrastructure 层（依赖注入）。
 
 ## 6. 当前已知边界
 
@@ -98,13 +144,12 @@ POST /spec/validate-with-spec
 
 ## 9. 更新记录
 
-**最近复核时间**：2026-05-06  
+**最近复核时间**：2026-05-14
 **复核依据**：
-- `backend/app/api/endpoints/documents.py`
-- `backend/app/api/endpoints/validations.py`
-- `backend/app/api/endpoints/corrections.py`
 - `backend/app/api/endpoints/spec_validation.py`
 - `backend/app/infrastructure/persistence/spec_session_repository.py`
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx`
+- `clients/apps/web/src/lib/api.ts`
 
 **当前可信度**：高  
 **待确认点**：任务系统与 application 层收敛策略。

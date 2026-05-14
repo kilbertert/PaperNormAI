@@ -5,10 +5,10 @@
 
 ## 当前阶段
 
-**Active Step:** Step 6 已完成（KG-4 规则持久化）  
-**Status:** Phase 1 ✅ | Phase 2 ✅ | KG-4 ✅  
-**Started:** 2026-05-03  
-**Last Updated:** 2026-05-06
+**Active Step:** Step 8B — 前端接入（Next.js）— 已完成
+**Status:** Phase 1 ✅ | Phase 2 ✅ | KG-4 ✅ | Step 6A ✅ | Step 7 ✅ | Step 8A ✅ | Step 8B-Pre ✅ | Step 8B ✅
+**Started:** 2026-05-03（Step 1）/ 2026-05-14（Step 6A/7/8A）
+**Last Updated:** 2026-05-14
 
 ---
 
@@ -22,6 +22,10 @@
 | Step 4 — KG-1/2/3 验证与 AI Provider 集成 | ✅ 完成 | 2026-05-05 |
 | Step 5 — 表格/插图/公式解析（Phase 2） | ✅ 完成 | 2026-05-05 |
 | Step 6 — KG-4 规则持久化（SpecSession） | ✅ 完成 | 2026-05-06 |
+| Step 6A — Architecture Repair（domain→infrastructure 分层违规修复） | ✅ 完成 | 2026-05-14 |
+| Step 7 — ValidationReport 深度持久化 | ✅ 完成 | 2026-05-14 |
+| Step 8B-Pre — ValidationReport 查询 API | ✅ 完成 | 2026-05-14 |
+| Step 8B — 前端接入（Next.js） | ✅ 完成 | 2026-05-14 |
 
 ---
 
@@ -36,7 +40,12 @@ POST /api/v1/spec/parse-spec
 POST /api/v1/spec/validate-with-spec
   -> DoclingDocumentParser
   -> SemanticValidationService
-  -> 返回 ValidationReport 统计
+  -> ValidationReportModel + ViolationDetailModel 同步落库
+  -> 返回统计 + report_id
+
+GET /api/v1/spec/reports/{report_id}        # Step 8B-Pre 新增
+  -> ValidationReportModel + ViolationDetailModel
+  -> 返回完整报告 + 所有违规明细
 
 POST /api/v1/documents/upload
 POST /api/v1/validations
@@ -75,6 +84,9 @@ POST /api/v1/corrections
 
 ## 下一步
 
-1. 启动 Step 7（待定义）：优先从前端接入或 ValidationReport 深度持久化二选一。  
-2. 执行 200/300/400/600/800 知识文档刷新为代码事实态。  
-3. 对接 Step COMPLETE 四件套对账机制到 BUILD-LOG 流程。
+1. **Step 8B — 前端接入（Next.js）**：新建 Next.js 前端项目，接入后端 API
+
+2. **技术债务跟踪**：
+   - API → application 下沉重构 — 中优先级（单独立项）
+   - Alembic 数据库迁移路径建立 — 低优先级
+   - OMA 可观测性/重试机制借鉴 — 低优先级

@@ -178,6 +178,52 @@ class SpecSessionModel(Base):
         return f"<SpecSessionModel {self.session_id}>"
 
 
+class ValidationReportModel(Base):
+    """Validation report database model — persists spec-based validation reports."""
+
+    __tablename__ = "validation_reports"
+
+    report_id = Column(String(36), primary_key=True)  # Full UUID string
+    session_id = Column(String(32), ForeignKey("spec_sessions.session_id"), nullable=False, index=True)
+    document_name = Column(String(255), nullable=True)
+    template_name = Column(String(255), nullable=True)
+    total_count = Column(Integer, default=0)
+    error_count = Column(Integer, default=0)
+    warning_count = Column(Integer, default=0)
+    info_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    violations = relationship("ViolationDetailModel", back_populates="report", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<ValidationReportModel {self.report_id} total={self.total_count}>"
+
+
+class ViolationDetailModel(Base):
+    """Violation detail database model — persists individual violations."""
+
+    __tablename__ = "violation_details"
+
+    id = Column(String(36), primary_key=True)  # Full UUID string, matches domain entity
+    report_id = Column(String(36), ForeignKey("validation_reports.report_id"), nullable=False, index=True)
+    category = Column(String(50), nullable=False)
+    severity = Column(String(20), nullable=False)
+    description = Column(Text, nullable=True)
+    paragraph_index = Column(Integer, nullable=True)
+    text = Column(Text, nullable=True)
+    original_content = Column(Text, nullable=True)
+    suggested_fix = Column(Text, nullable=True)
+    context_before = Column(Text, nullable=True)
+    context_after = Column(Text, nullable=True)
+    user_modified_fix = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    report = relationship("ValidationReportModel", back_populates="violations")
+
+    def __repr__(self):
+        return f"<ViolationDetailModel {self.category} {self.severity}>"
+
+
 class AuditLogModel(Base):
     """Audit log database model."""
 

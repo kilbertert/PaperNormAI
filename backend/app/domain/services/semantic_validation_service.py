@@ -1,10 +1,9 @@
 """Semantic validation service for validating thesis documents against rules."""
 
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Protocol
 from datetime import datetime
-from app.infrastructure.docling.document_model import DocumentModel
-from app.infrastructure.ai.openai_provider import OpenAIProvider
+
 from app.domain.entities.validation_report import (
     ValidationReport,
     ViolationDetail,
@@ -12,6 +11,47 @@ from app.domain.entities.validation_report import (
     ViolationSeverity,
     TextLocation,
 )
+
+
+class IDocumentParser(Protocol):
+    """Abstract interface for document parsing."""
+
+    def parse(self, file_path) -> "DocumentModelLike": ...
+
+    def get_text_content(self) -> str: ...
+
+
+class DocumentModelLike(Protocol):
+    """Protocol for document model returned by IDocumentParser."""
+    pass
+
+
+class IAIProvider(Protocol):
+    """Abstract interface for AI providers."""
+
+    @property
+    def _client(self) -> "ClientLike": ...
+    @property
+    def _model(self) -> str: ...
+    @property
+    def _timeout(self) -> int: ...
+
+    def is_configured(self) -> bool: ...
+    def analyze_citation(self, citation_text: str) -> dict: ...
+    def analyze_reference(self, reference_text: str) -> dict: ...
+
+
+class ClientLike(Protocol):
+    """Protocol for OpenAI-style client."""
+    def chat(self) -> "ChatLike": ...
+
+
+class ChatLike(Protocol):
+    def completions(self) -> "CompletionsLike": ...
+
+
+class CompletionsLike(Protocol):
+    def create(self, **kwargs) -> "CompletionResponseLike": ...
 
 
 class SemanticValidationService:
@@ -79,12 +119,13 @@ class SemanticValidationService:
 # 开始校验
 """
 
-    def __init__(self, openai_provider: Optional[OpenAIProvider] = None):
-        self._provider = openai_provider or OpenAIProvider()
+    def __init__(self, document_parser: Optional[IDocumentParser] = None, ai_provider: Optional[IAIProvider] = None):
+        self._parser = document_parser
+        self._provider = ai_provider
 
     def validate(
         self,
-        thesis_doc: DocumentModel,
+        thesis_doc: "DocumentModelLike",
         rules: List[Dict[str, str]],
         document_name: str = "unknown",
         template_name: Optional[str] = None,
@@ -144,7 +185,7 @@ class SemanticValidationService:
             lines.append(f"{i}. [{category}] {priority}: {description}")
         return '\n'.join(lines)
 
-    def _format_paragraphs(self, doc: DocumentModel) -> str:
+    def _format_paragraphs(self, doc: "DocumentModelLike") -> str:
         """Format paragraphs for prompt."""
         lines = []
         for i, para in enumerate(doc.paragraphs, start=1):
@@ -188,7 +229,7 @@ class SemanticValidationService:
             print(f"OpenAI API error: {e}")
             return None
 
-    def _parse_violations(self, response: str, doc: DocumentModel) -> List[ViolationDetail]:
+    def _parse_violations(self, response: str, doc: "DocumentModelLike") -> List[ViolationDetail]:
         """Parse AI response into ViolationDetail list."""
         violations = []
         lines = response.split('\n')
@@ -256,7 +297,7 @@ class SemanticValidationService:
 
         return violations
 
-    def _create_violation_from_data(self, data: dict, doc: DocumentModel, violations: list) -> None:
+    def _create_violation_from_data(self, data: dict, doc: "DocumentModelLike", violations: list) -> None:
         """Create a ViolationDetail from parsed data."""
         paragraph = data.get("paragraph")
         if paragraph is None:

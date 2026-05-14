@@ -6,27 +6,43 @@ corrected .docx files.
 
 from dataclasses import replace
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Protocol
 
 from app.domain.entities.document import Document
 from app.domain.entities.correction_plan import CorrectionPlan, CorrectionStatus, CorrectionActionType
 from app.domain.entities.validation_result import ValidationResult
-from app.infrastructure.docx.document_parser import ParsedDocument, DocumentElement
-from app.infrastructure.docx.document_writer import DocumentWriter
+
+
+class IParsedDocument(Protocol):
+    """Abstract interface for parsed document model."""
+
+    def get_elements(self) -> List["ElementLike"]: ...
+
+
+class ElementLike(Protocol):
+    """Abstract interface for document element."""
+    pass
+
+
+class IDocumentWriter(Protocol):
+    """Abstract interface for document writing."""
+
+    def write_to_docx(self, parsed_document: "IParsedDocument", output_path: Path) -> None: ...
+    def apply_corrections(self, parsed_document: "IParsedDocument", plans: List[CorrectionPlan]) -> "IParsedDocument": ...
 
 
 class CorrectionExecutor:
     """Domain service for executing correction plans."""
 
-    def __init__(self, document_writer: Optional[DocumentWriter] = None):
-        self._writer = document_writer or DocumentWriter()
+    def __init__(self, document_writer: Optional[IDocumentWriter] = None):
+        self._writer = document_writer
 
     def execute(
         self,
         document: Document,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         plans: List[CorrectionPlan],
-    ) -> ParsedDocument:
+    ) -> "IParsedDocument":
         """Execute correction plans on a parsed document.
 
         Args:
@@ -49,7 +65,7 @@ class CorrectionExecutor:
     def execute_and_save(
         self,
         document: Document,
-        parsed_document: ParsedDocument,
+        parsed_document: "IParsedDocument",
         plans: List[CorrectionPlan],
         output_path: Path,
     ) -> Path:
