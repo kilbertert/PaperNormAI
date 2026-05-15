@@ -809,3 +809,38 @@
 **后续建议动作**：
 - 调查 DeepSeek API key 为何失效，是否需要更新
 - 在 spec_validation.py parse-spec 中添加验证当 rules_count == 0 时的警告
+
+## 2026-05-15 05:00 - Step 10 API → Application 下沉重构
+
+**学习类型**：专题学习 / 架构治理
+
+**触发原因**：Step 10 — 标准下沉，将 API endpoint 编排职责下沉到 application 层
+
+**阅读范围**：
+- `backend/app/api/endpoints/spec_validation.py`
+- `backend/app/api/endpoints/corrections.py`
+- `backend/app/application/spec/spec_application_service.py`
+- `backend/app/application/correction/correction_application_service.py`
+- `backend/app/application/exceptions.py`
+
+**新确认的事实**：
+1. Application layer 位于 API 和 Domain 之间，负责 orchestration、transaction、repository 调用
+2. Application service 应该抛出业务异常（NotFoundError、AccessDeniedError、ValidationError），而非 HTTP 异常
+3. Endpoint 负责映射 application exception → HTTP exception（404/403/422）
+4. Repository 在 application service 内部基于 db 构造，不在 endpoint 层实例化
+5. Transaction 边界在 application service method 内（显式 commit/rollback）
+
+**发现的空白或冲突**：
+1. 原有 endpoint 承担了编排 + 事务 + 权限判断职责，需要拆分
+2. Application exception 体系需要新建，不能依赖 FastAPI HTTPException
+
+**知识增量**：
+- 标准下沉模式：API(thin) → Application(orchestration) → Domain(logic) → Infrastructure(persistence)
+- 异常映射模式：Application 抛出业务异常，Endpoint 转换为 HTTP 异常
+- 目录结构：app/application/spec/ + app/application/correction/（按业务能力组织）
+
+**关联提交**：无直接提交（调试过程）
+
+**后续建议动作**：
+- 考虑将 application 层做得更规范，比如统一 base class
+- 评估是否需要独立的 exception handler middleware

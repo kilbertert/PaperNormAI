@@ -1,11 +1,8 @@
 """Correction job endpoints."""
 
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from uuid import UUID
-import json
-import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
@@ -13,14 +10,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db, CurrentUser
-from app.core.config import settings
-from app.infrastructure.persistence.document_repository import DocumentRepository
-from app.infrastructure.persistence.template_repository import TemplateRepository
-from app.infrastructure.persistence.models import CorrectionJobModel, CorrectionPlanModel, ValidationResultModel
-from app.domain.entities.correction_plan import CorrectionPlan, CorrectionStatus, CorrectionActionType
-from app.domain.services.correction_executor import CorrectionExecutor
-from app.infrastructure.docx.document_parser import DocumentParser
-from app.infrastructure.docx.document_writer import DocumentWriter
+from app.application.correction.correction_application_service import CorrectionApplicationService
+from app.application.exceptions import NotFoundError, AccessDeniedError, ValidationError
 
 router = APIRouter()
 
@@ -72,12 +63,20 @@ async def _run_correction_job(
     db = SessionLocal()
 
     try:
+        from app.infrastructure.persistence.models import CorrectionJobModel, CorrectionPlanModel
+        from app.domain.entities.correction_plan import CorrectionPlan, CorrectionStatus, CorrectionActionType
+        from app.infrastructure.docx.document_parser import DocumentParser
+        from app.infrastructure.docx.document_writer import DocumentWriter
+        from app.domain.services.correction_executor import CorrectionExecutor
+        from app.infrastructure.persistence.document_repository import DocumentRepository
+        from app.core.config import settings
+
         job = db.query(CorrectionJobModel).filter(CorrectionJobModel.id == job_id).first()
         if not job:
             return
 
         job.status = "running"
-        job.started_at = datetime.utcnow()
+        job.started_at = __import__("datetime").datetime.utcnow()
         db.commit()
 
         doc_repo = DocumentRepository(db)
@@ -86,7 +85,7 @@ async def _run_correction_job(
         if not document:
             job.status = "failed"
             job.error_message = "Document not found"
-            job.completed_at = datetime.utcnow()
+            job.completed_at = __import__("datetime").datetime.utcnow()
             db.commit()
             return
 
@@ -128,7 +127,7 @@ async def _run_correction_job(
 
         job.output_path = str(output_path)
         job.status = "completed"
-        job.completed_at = datetime.utcnow()
+        job.completed_at = __import__("datetime").datetime.utcnow()
         db.commit()
 
     except Exception as e:
@@ -136,10 +135,21 @@ async def _run_correction_job(
         if job:
             job.status = "failed"
             job.error_message = str(e)
-            job.completed_at = datetime.utcnow()
+            job.completed_at = __import__("datetime").datetime.utcnow()
             db.commit()
     finally:
         db.close()
+
+
+def _map_exception(e: Exception) -> HTTPException:
+    """Map application exceptions to HTTP exceptions."""
+    if isinstance(e, NotFoundError):
+        return HTTPException(status_code=404, detail=e.message)
+    if isinstance(e, AccessDeniedError):
+        return HTTPException(status_code=403, detail=e.message)
+    if isinstance(e, ValidationError):
+        return HTTPException(status_code=422, detail=e.message)
+    return HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/", status_code=202)
@@ -149,53 +159,30 @@ async def create_correction(
     db: Session = Depends(get_db),
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
-    """Create a new correction job.
-
-    Args:
-        request: Contains document_id and plan_ids
-        current_user: Authenticated user
-        db: Database session
-        background_tasks: FastAPI background tasks
-
-    Returns:
-        Job information with ID and status
-    """
-    doc_repo = DocumentRepository(db)
-
+    """Create a new correction job."""
     try:
         document_id = UUID(request.document_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid document ID format")
 
-    document = doc_repo.find_by_id(document_id)
-    if document is None:
-        raise HTTPException(status_code=404, detail="Document not found")
+    def background_fn(job_id, doc_id, plan_ids, db_url):
+        background_tasks.add_task(_run_correction_job, job_id, doc_id, plan_ids, db_url)
 
-    if document.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    job = CorrectionJobModel(
-        document_id=document_id,
-        plan_ids_json=json.dumps(request.plan_ids),
-        status="pending",
-    )
-    db.add(job)
-    db.commit()
-    db.refresh(job)
-
-    background_tasks.add_task(
-        _run_correction_job,
-        job.id,
-        document_id,
-        request.plan_ids,
-        str(settings.database_url),
-    )
-
-    return CorrectionJobResponse(
-        job_id=str(job.id),
-        status=job.status,
-        created_at=job.created_at.isoformat(),
-    )
+    service = CorrectionApplicationService(db)
+    try:
+        result = service.create_correction_job(
+            document_id,
+            request.plan_ids,
+            current_user.id,
+            background_fn,
+        )
+        return CorrectionJobResponse(
+            job_id=result["job_id"],
+            status=result["status"],
+            created_at=result["created_at"],
+        )
+    except Exception as e:
+        raise _map_exception(e)
 
 
 @router.get("/{job_id}", response_model=CorrectionResponse)
@@ -204,64 +191,38 @@ async def get_correction(
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get correction job status.
-
-    Args:
-        job_id: Correction job UUID
-        current_user: Authenticated user
-        db: Database session
-
-    Returns:
-        Correction job with status
-    """
+    """Get correction job status."""
     try:
         job_uuid = UUID(job_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid job ID format")
 
-    job = db.query(CorrectionJobModel).filter(
-        CorrectionJobModel.id == job_uuid
-    ).first()
-
-    if job is None:
-        raise HTTPException(status_code=404, detail="Correction job not found")
-
-    doc_repo = DocumentRepository(db)
-    doc = doc_repo.find_by_id(job.document_id)
-    if doc and doc.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    plan_ids = json.loads(job.plan_ids_json) if job.plan_ids_json else []
-    plans = []
-    for plan_id_str in plan_ids:
-        try:
-            plan_uuid = UUID(plan_id_str)
-            plan_model = db.query(CorrectionPlanModel).filter(
-                CorrectionPlanModel.id == plan_uuid
-            ).first()
-            if plan_model:
-                plans.append(CorrectionPlanResponse(
-                    id=str(plan_model.id),
-                    rule_id=plan_model.result_id,
-                    action_type=plan_model.action_type,
-                    target_path=plan_model.target_path,
-                    original_value=plan_model.original_value or "",
-                    planned_value=plan_model.planned_value or "",
-                    status=plan_model.status,
-                ))
-        except (ValueError, TypeError):
-            continue
-
-    return CorrectionResponse(
-        id=str(job.id),
-        document_id=str(job.document_id),
-        status=job.status,
-        output_path=job.output_path,
-        error_message=job.error_message,
-        plans=plans,
-        created_at=job.created_at.isoformat(),
-        completed_at=job.completed_at.isoformat() if job.completed_at else None,
-    )
+    service = CorrectionApplicationService(db)
+    try:
+        result = service.get_correction_job(job_uuid, current_user.id)
+        return CorrectionResponse(
+            id=result["id"],
+            document_id=result["document_id"],
+            status=result["status"],
+            output_path=result.get("output_path"),
+            error_message=result.get("error_message"),
+            plans=[
+                CorrectionPlanResponse(
+                    id=p["id"],
+                    rule_id=p["rule_id"],
+                    action_type=p["action_type"],
+                    target_path=p["target_path"],
+                    original_value=p["original_value"],
+                    planned_value=p["planned_value"],
+                    status=p["status"],
+                )
+                for p in result["plans"]
+            ],
+            created_at=result["created_at"],
+            completed_at=result.get("completed_at"),
+        )
+    except Exception as e:
+        raise _map_exception(e)
 
 
 @router.get("/{job_id}/download")
@@ -270,45 +231,19 @@ async def download_corrected_document(
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Download the corrected document.
-
-    Args:
-        job_id: Correction job UUID
-        current_user: Authenticated user
-        db: Database session
-
-    Returns:
-        FileResponse with the corrected .docx file
-    """
+    """Download the corrected document."""
     try:
         job_uuid = UUID(job_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid job ID format")
 
-    job = db.query(CorrectionJobModel).filter(
-        CorrectionJobModel.id == job_uuid
-    ).first()
-
-    if job is None:
-        raise HTTPException(status_code=404, detail="Correction job not found")
-
-    if job.status != "completed" or not job.output_path:
-        raise HTTPException(
-            status_code=400,
-            detail="Correction job not completed or no output file",
+    service = CorrectionApplicationService(db)
+    try:
+        result = service.get_download_info(job_uuid, current_user.id)
+        return FileResponse(
+            path=result["file_path"],
+            filename=result["filename"],
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
-
-    doc_repo = DocumentRepository(db)
-    doc = doc_repo.find_by_id(job.document_id)
-    if doc and doc.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    file_path = Path(job.output_path)
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found on storage")
-
-    return FileResponse(
-        path=file_path,
-        filename=f"corrected_{doc.original_filename if doc else 'document.docx'}",
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    )
+    except Exception as e:
+        raise _map_exception(e)

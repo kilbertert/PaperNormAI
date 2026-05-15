@@ -19,6 +19,9 @@ from app.infrastructure.persistence.models import (
     ValidationResultModel,
     CorrectionPlanModel,
     CorrectionJobModel,
+    SpecSessionModel,
+    ValidationReportModel,
+    ViolationDetailModel,
     AuditLogModel,
 )
 

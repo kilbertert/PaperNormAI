@@ -201,7 +201,16 @@
 
 ---
 
+## 2026-05-15 - architecture-refactor (Step 10)
+
+**场景**：Step 10 — API → application 下沉重构
+**输入**：feature=Step 10 标准下沉，endpoint 只保留 HTTP 解析/响应映射，application service 负责编排/事务/repository/权限
+**结论**：完成 — 新建 app/application/spec/spec_application_service.py 和 app/application/correction/correction_application_service.py；重构 spec_validation.py 和 corrections.py 为薄 endpoint；通过 architecture-check
+**关联**：`backend/app/application/spec/spec_application_service.py`、`backend/app/application/correction/correction_application_service.py`、`backend/app/application/exceptions.py`、`backend/app/api/endpoints/spec_validation.py`、`backend/app/api/endpoints/corrections.py`
+
+---
+
 ## 6. 更新记录
 
 **创建时间**：2026-05-01
-**最近更新**：2026-05-15 — 新增 Step 9 bugfix (DocumentRepository UUID type)
+**最近更新**：2026-05-15 — 新增 Step 10 architecture-refactor 记录

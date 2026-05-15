@@ -39,6 +39,50 @@ Checklist (Step COMPLETE):
 
 ---
 
+### Step 11 — Alembic 数据库迁移路径建立 — COMPLETE
+*Date: 2026-05-15*
+
+**状态**：✅ 迁移基线已建立，可使用
+
+**已完成操作**：
+- `alembic/env.py` 导入全部 10 个模型（Base.metadata 正确指向）
+- `alembic_version` 表已创建，stamp 为 `001`
+- `alembic current` → `001 (head)` ✅
+- `alembic upgrade head` → 无升级（已处于最新）✅
+
+**已知限制（必须人工审阅）**：
+
+| 限制 | 说明 |
+|------|------|
+| autogenerate schema drift | SQLAlchemy 模型 vs 真实 DB 存在 NUMERIC/UUID 类型差异，autogenerate 会报 diff |
+| test_pguuid 表 | 真实 DB 中存在但模型中无，autogenerate 会报 remove_table |
+| audit_logs 列差异 | 真实 DB 有 rules_json/session_id/summary_json 列，模型中无 |
+
+**后续使用纪律（强制）**：
+- `alembic revision --autogenerate -m "..."` 结果必须人工审阅后才能执行
+- 审阅清单：
+  - [ ] 是否只包含本次业务变更
+  - [ ] 是否误包含历史类型修正（NUMERIC→UUID 等历史漂移）
+  - [ ] upgrade/downgrade 是否可解释
+  - [ ] 是否在本地 `upgrade head` 验证通过
+
+**正确用法**：
+```bash
+# 生成迁移（需人工审阅 upgrade/downgrade 内容）
+alembic revision --autogenerate -m "add new table"
+
+# 本地验证
+alembic upgrade head
+
+# 确认无误后执行
+```
+
+**错误用法**：
+- 直接执行 autogenerate 输出而不审阅
+- 假设 autogenerate 的 diff 都是"本次应迁移变更"
+
+---
+
 ## Step History
 
 ### Step 6A — Architecture Repair: Remove domain -> infrastructure dependencies — COMPLETE
@@ -367,6 +411,30 @@ Deploy: 不适用（开发阶段）
 - **ADR-001** — 使用 docling 作为文档解析引擎 — 2026-05-03
 - **ADR-002** — 使用 AI 语义理解提取规则（而非结构化规则）— 2026-05-03
 - **ADR-003** — 使用 AI-Word-Skill 实现文档修正合并 — 2026-05-03
-- **ADR-004** — MVP 分两阶段实施 — 2026-05-03
-- **ADR-005** — 规则存储采用用户级别持久化 — 2026-05-03
-- **ADR-006** — AI Provider 支持多后端（OpenAI/Ollama/DeepSeek）— 2026-05-05
+---
+
+### Step 10 — API → Application 下沉重构 — COMPLETE
+*Date: 2026-05-15*
+
+Files changed:
+- `backend/app/application/exceptions.py` — 新建（AppException, NotFoundError, AccessDeniedError, ValidationError）
+- `backend/app/application/spec/spec_application_service.py` — 新建（SpecApplicationService）
+- `backend/app/application/correction/correction_application_service.py` — 新建（CorrectionApplicationService）
+- `backend/app/api/endpoints/spec_validation.py` — 重构为薄 endpoint
+- `backend/app/api/endpoints/corrections.py` — 重构为薄 endpoint
+
+Decisions made:
+- Endpoint 只保留 HTTP 解析/响应映射/application service 调用
+- Application service 负责编排/事务/repository 调用/权限判断
+- Application exception 体系（NotFoundError/AccessDeniedError/ValidationError）替代 HTTP exception
+- 目录结构：app/application/spec/ + app/application/correction/（按业务能力组织）
+- Transaction 边界在 application service method 内（显式 commit）
+
+验证结果:
+- ✅ spec_validation.py 变薄（0 infrastructure imports，delegates to SpecApplicationService）
+- ✅ corrections.py 变薄（delegates to CorrectionApplicationService）
+- ✅ 端到端测试通过：parse-spec → validate-with-spec → get-report → create-correction → completed
+- ✅ architecture-check 通过
+
+Deploy: 不适用（开发阶段）
+

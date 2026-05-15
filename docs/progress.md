@@ -27,42 +27,59 @@
 | Step 8B-Pre — ValidationReport 查询 API | ✅ 完成 | 2026-05-14 |
 | Step 8B — 前端接入（Next.js） | ✅ 完成 | 2026-05-14 |
 | Step 9 — Correction Download 前端集成 | ✅ 完成 | 2026-05-15 |
+| Step 10 — API → application 下沉重构 | ✅ 完成 | 2026-05-15 |
+| Step 11 — Alembic 数据库迁移路径建立 | ✅ 完成 | 2026-05-15 |
+
+## Alembic 迁移状态
+
+| 项目 | 状态 |
+|------|------|
+| 迁移基线 | ✅ `001` — stamp 已建立 |
+| autogenerate 可信度 | ⚠️ 需人工审阅（存在 schema drift） |
+| `alembic upgrade head` | ✅ 通过 |
+
+**使用纪律**：autogenerate 结果必须人工审阅后才能执行，见 `handoff/BUILD-LOG.md`。
 
 ---
 
 ## 当前可用链路（代码事实）
 
 ```text
+API Layer (thin endpoints)
+  -> Application Layer (orchestration + transaction)
+    -> Domain Layer (business logic)
+      -> Infrastructure Layer (persistence)
+
 POST /api/v1/spec/parse-spec
-  -> DoclingDocumentParser
+  -> SpecApplicationService.parse_spec()
   -> RuleExtractionService
   -> SpecSessionRepository.save
 
 POST /api/v1/spec/validate-with-spec
-  -> DoclingDocumentParser
+  -> SpecApplicationService.validate_with_spec()
   -> SemanticValidationService
   -> ValidationReportModel + ViolationDetailModel 同步落库
-  -> 返回统计 + report_id
+  -> DocumentModel 持久化（thesis）
 
-GET /api/v1/spec/reports/{report_id}        # Step 8B-Pre 新增
+GET /api/v1/spec/reports/{report_id}
+  -> SpecApplicationService.get_validation_report()
   -> ValidationReportModel + ViolationDetailModel
-  -> 返回完整报告 + 所有违规明细
 
-POST /api/v1/corrections/                    # Step 9 前端集成
-  -> 创建 CorrectionJobModel
+DELETE /api/v1/spec/sessions/{session_id}
+  -> SpecApplicationService.delete_spec_session()
+
+POST /api/v1/corrections/
+  -> CorrectionApplicationService.create_correction_job()
+  -> CorrectionJobModel 持久化
   -> BackgroundTasks 执行修正
-  -> 返回 job_id + status
 
-GET /api/v1/corrections/{job_id}             # Step 9 前端集成
-  -> 返回修正任务状态 + plans
+GET /api/v1/corrections/{job_id}
+  -> CorrectionApplicationService.get_correction_job()
+  -> 返回 job 状态 + plans
 
-GET /api/v1/corrections/{job_id}/download   # Step 9 前端集成
-  -> 返回 corrected_*.docx 文件
-
-POST /api/v1/documents/upload
-POST /api/v1/validations
-POST /api/v1/corrections
-  -> DocumentRepository / TemplateRepository / ValidationJobModel / CorrectionJobModel
+GET /api/v1/corrections/{job_id}/download
+  -> CorrectionApplicationService.get_download_info()
+  -> FileResponse 返回 corrected 文件
 ```
 
 ---
@@ -96,9 +113,10 @@ POST /api/v1/corrections
 
 ## 下一步
 
-1. **Step 9 — Correction Download 前端集成**：在报告页增加"生成修正/下载修正文档"入口
+1. **Step 12（待定）**：P2 决策 — 前端继续扩展 或 治理重构
 
 2. **技术债务跟踪**：
-   - API → application 下沉重构 — 中优先级（单独立项）
-   - Alembic 数据库迁移路径建立 — 低优先级
+   - Alembic 数据库迁移路径建立 — ✅ 已完成（Step 11）
+   - API → application 下沉重构 — ✅ 已完成（Step 10）
+   - DeepSeek API Key 更新 — 高优先级
    - OMA 可观测性/重试机制借鉴 — 低优先级
