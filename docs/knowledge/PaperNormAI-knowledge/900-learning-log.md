@@ -516,6 +516,46 @@
 
 ---
 
+## 2026-05-14 14:00 - Step 9: Correction Download Frontend Integration
+
+**学习类型**：流程学习
+
+**触发原因**：Step 8B 完成"登录→报告展示"闭环后，继续推进用户价值链到"修正文档下载"。
+
+**阅读范围**：
+- `backend/app/api/endpoints/corrections.py`（POST /corrections/、GET /corrections/{job_id}、GET /corrections/{job_id}/download）
+- `backend/app/api/endpoints/spec_validation.py`（document_name 追加到 SpecValidationResponse）
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx`
+- `clients/apps/web/src/lib/api.ts`
+
+**新确认的事实**：
+- corrections.py 的 document_id 需要 UUID，必须先上传 thesis 到 DocumentModel
+- 修正链路：corrections.py → DocumentRepository → 读取 file_path → DocumentParser → CorrectionExecutor → DocumentWriter
+- spec 链路验证 thesis 后不上传到 DocumentModel（只做临时文件解析）
+- Step 9 修复：POST /validate-with-spec 验证后立即持久化 thesis 为 DocumentModel（document_id = report_id）
+- 轮询状态机：pending → running → completed/failed
+- 下载 URL 无法直接通过 <a href=URL> 下载（token 丢失），改用 fetch + Authorization header + Blob.createObjectURL
+
+**发现的空白或冲突**：
+- spec 链路不上传 thesis 到 DocumentModel（只做临时文件解析），corrections.py 需要 document_id
+- 当前 corrections.py 修正执行依赖 DocumentParser + DocumentWriter（基于 python-docx），不是 Docling 路径
+- 下载 URL 直接放 href 会丢失 Bearer token，改用 fetch + Blob
+
+**更新了哪些知识文档**：
+- `docs/progress.md` — 更新 Step 9 进行中，追加 correction 链路到当前可用链路
+- `backend/app/api/endpoints/spec_validation.py` — SpecValidationResponse 追加 document_name 字段 + thesis 持久化
+- `backend/app/api/endpoints/corrections.py` — CorrectionResponse 追加 error_message 字段
+- `clients/apps/web/src/lib/types.ts` — 新增 CorrectionJobResponse、CorrectionStatus 接口
+- `clients/apps/web/src/lib/api.ts` — 新增 createCorrectionJob、getCorrectionJob、getCorrectionDownloadUrl
+- `clients/apps/web/src/app/spec/[sessionId]/page.tsx` — 简化跳转
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx` — 新增"Generate Corrected Document"按钮 + 轮询下载逻辑
+
+**后续建议动作**：
+- Step 9 四件套对账
+- 端到端联调验证（修正文档下载）
+
+---
+
 ## 2026-05-14 07:00 - Step 8B-Pre: ValidationReport 查询 API
 
 **学习类型**：增量学习
@@ -732,3 +772,40 @@
 **当前可信度**：高
 
 **待确认点**：学习日志模板将来可能随着 skill 体系建立而扩展字段。
+
+## 2026-05-15 02:00 - Step 9 端到端调试与 DocumentRepository UUID 类型修复
+
+**学习类型**：专题学习 / 问题驱动
+
+**触发原因**：Step 9 correction endpoint 持续返回 404 Document not found，despite document existing in DB.
+
+**阅读范围**：
+- `backend/app/infrastructure/persistence/document_repository.py`
+- `backend/app/infrastructure/persistence/mappers.py`
+- `backend/app/api/endpoints/corrections.py`
+
+**新确认的事实**：
+1. DocumentRepository.find_by_id uses raw SQL with `text()` to avoid PGUUID binding issues in SQLite
+2. Raw SQL `SELECT * FROM documents WHERE id = :id` returns row with `str` types for id/user_id columns
+3. Creating `DocumentModel(id=row.id, user_id=row.user_id, ...)` passed strings directly, NOT UUID objects
+4. DocumentMapper.to_domain then passed `model.user_id` (string) to Document entity which has `user_id: UUID` field
+5. The comparison `document.user_id != current_user.id` compared `str` vs `uuid.UUID`, always returning False
+6. Fix: convert row.user_id to UUID when constructing DocumentModel in find_by_id
+7. `.env` file with DEEPSEEK_API_KEY is required for AI features to work — without it, rules extract as 0
+
+**发现的空白或冲突**：
+1. `DocumentRepository.find_by_id` was passing raw strings to DocumentModel instead of UUID objects
+2. This caused user_id comparison failure in corrections.py even though document was found
+3. DeepSeek API key (sk-a2fb983c14e54ca68409923b6373fcb1) was invalid — "Authentication Fails, Your api key is invalid"
+4. Without valid API key, rule extraction returns 0 rules, validation returns 0 violations
+
+**知识增量**：
+- SQLite stores UUID as text but SQLAlchemy PGUUID type requires UUID object binding
+- Raw SQL with `text()` returns strings, must convert to UUID for ORM column assignment
+- Document comparison should use `str()` on both sides to avoid type mismatch
+
+**关联提交**：无直接提交（调试过程）
+
+**后续建议动作**：
+- 调查 DeepSeek API key 为何失效，是否需要更新
+- 在 spec_validation.py parse-spec 中添加验证当 rules_count == 0 时的警告

@@ -51,6 +51,7 @@ class CorrectionResponse(BaseModel):
     document_id: str
     status: str
     output_path: Optional[str] = None
+    error_message: Optional[str] = None
     plans: list[CorrectionPlanResponse] = []
     created_at: str
     completed_at: Optional[str] = None
@@ -256,6 +257,7 @@ async def get_correction(
         document_id=str(job.document_id),
         status=job.status,
         output_path=job.output_path,
+        error_message=job.error_message,
         plans=plans,
         created_at=job.created_at.isoformat(),
         completed_at=job.completed_at.isoformat() if job.completed_at else None,

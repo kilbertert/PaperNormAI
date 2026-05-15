@@ -13,6 +13,8 @@ export default function ReportPage() {
   const [report, setReport] = useState<ValidationReportResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [correcting, setCorrecting] = useState(false)
+  const [correctionStatus, setCorrectionStatus] = useState('')
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -32,6 +34,65 @@ export default function ReportPage() {
     }
     fetchReport()
   }, [router, reportId])
+
+  const handleDownloadCorrection = async () => {
+    if (!report?.report_id) {
+      setError('Report ID not available')
+      return
+    }
+    setCorrecting(true)
+    setError('')
+    setCorrectionStatus('Creating correction job...')
+    try {
+      const { createCorrectionJob, getCorrectionJob, getCorrectionDownloadUrl } = await import('@/lib/api')
+
+      // Step 1: Create correction job using report_id as document_id
+      const job = await createCorrectionJob(report.report_id, [])
+
+      setCorrectionStatus('Processing corrections...')
+
+      // Step 2: Poll until completed
+      let attempts = 0
+      while (attempts < 60) {
+        await new Promise(r => setTimeout(r, 2000))
+        const status = await getCorrectionJob(job.job_id)
+
+        if (status.status === 'completed') {
+          setCorrectionStatus('Downloading...')
+          // Step 3: Trigger download using fetch with auth header
+          const downloadUrl = getCorrectionDownloadUrl(job.job_id)
+          const token = localStorage.getItem('access_token')
+          const response = await fetch(downloadUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (!response.ok) throw new Error('Download failed')
+          const blob = await response.blob()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'corrected_document.docx'
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+          setCorrectionStatus('')
+          setCorrecting(false)
+          return
+        } else if (status.status === 'failed') {
+          throw new Error(status.error_message || 'Correction failed')
+        }
+
+        attempts++
+        setCorrectionStatus(`Processing... (${attempts * 2}s)`)
+      }
+
+      throw new Error('Correction timed out')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Correction failed')
+      setCorrecting(false)
+      setCorrectionStatus('')
+    }
+  }
 
   if (loading) return <div style={{ padding: '20px' }}>Loading...</div>
   if (error) return <div style={{ padding: '20px', color: 'red' }}>{error}</div>
@@ -61,6 +122,30 @@ export default function ReportPage() {
       </div>
 
       {report.document_name && <p><strong>Document:</strong> {report.document_name}</p>}
+
+      {/* Step 9: Correction download */}
+      <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+        <p style={{ marginBottom: '12px' }}>Found {report.total_count} violations. Generate a corrected document.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={handleDownloadCorrection}
+            disabled={correcting}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              backgroundColor: correcting ? '#ccc' : '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: correcting ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {correcting ? 'Generating...' : 'Generate Corrected Document'}
+          </button>
+          {correctionStatus && <span style={{ color: '#666' }}>{correctionStatus}</span>}
+        </div>
+        {error && <p style={{ color: 'red', marginTop: '8px' }}>{error}</p>}
+      </div>
 
       <h2 style={{ marginTop: '24px' }}>Violations</h2>
       {report.violations.length === 0 ? (

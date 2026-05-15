@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 
 from app.domain.entities.document import Document, DocumentStatus
 from app.domain.repositories import IDocumentRepository
@@ -28,13 +28,25 @@ class DocumentRepository(IDocumentRepository):
 
     def find_by_id(self, document_id: UUID) -> Optional[Document]:
         """Find a document by ID."""
-        model = self._db.query(DocumentModel).filter(
-            DocumentModel.id == document_id
-        ).first()
-
-        if model is None:
+        # PGUUID + SQLite: use raw SQL to avoid type coercion issues
+        result = self._db.execute(
+            text("SELECT * FROM documents WHERE id = :id"),
+            {"id": str(document_id)}
+        )
+        row = result.fetchone()
+        if row is None:
             return None
-
+        model = DocumentModel(
+            id=row.id,
+            user_id=UUID(row.user_id),  # Convert string to UUID for proper ORM behavior
+            original_filename=row.original_filename,
+            file_path=row.file_path,
+            file_hash=row.file_hash,
+            template_id=row.template_id,
+            status=row.status,
+            uploaded_at=row.uploaded_at,
+            updated_at=row.updated_at,
+        )
         return DocumentMapper.to_domain(model)
 
     def find_by_user_id(self, user_id: UUID, limit: int = 100, offset: int = 0) -> List[Document]:
@@ -61,7 +73,7 @@ class DocumentRepository(IDocumentRepository):
     def update(self, document: Document) -> None:
         """Update a document."""
         model = self._db.query(DocumentModel).filter(
-            DocumentModel.id == document.id
+            DocumentModel.id == str(document.id)
         ).first()
 
         if model is None:
@@ -77,7 +89,7 @@ class DocumentRepository(IDocumentRepository):
     def delete(self, document_id: UUID) -> None:
         """Delete a document."""
         model = self._db.query(DocumentModel).filter(
-            DocumentModel.id == document_id
+            DocumentModel.id == str(document_id)
         ).first()
 
         if model:

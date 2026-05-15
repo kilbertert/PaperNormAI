@@ -5,8 +5,8 @@
 
 ## 当前阶段
 
-**Active Step:** Step 8B — 前端接入（Next.js）— 已完成
-**Status:** Phase 1 ✅ | Phase 2 ✅ | KG-4 ✅ | Step 6A ✅ | Step 7 ✅ | Step 8A ✅ | Step 8B-Pre ✅ | Step 8B ✅
+**Active Step:** Step 9 — Correction Download Frontend Integration
+**Status:** Phase 1 ✅ | Phase 2 ✅ | KG-4 ✅ | Step 6A ✅ | Step 7 ✅ | Step 8A ✅ | Step 8B-Pre ✅ | Step 8B ✅ | Step 9 🔄
 **Started:** 2026-05-03（Step 1）/ 2026-05-14（Step 6A/7/8A）
 **Last Updated:** 2026-05-14
 
@@ -26,6 +26,7 @@
 | Step 7 — ValidationReport 深度持久化 | ✅ 完成 | 2026-05-14 |
 | Step 8B-Pre — ValidationReport 查询 API | ✅ 完成 | 2026-05-14 |
 | Step 8B — 前端接入（Next.js） | ✅ 完成 | 2026-05-14 |
+| Step 9 — Correction Download 前端集成 | ✅ 完成 | 2026-05-15 |
 
 ---
 
@@ -46,6 +47,17 @@ POST /api/v1/spec/validate-with-spec
 GET /api/v1/spec/reports/{report_id}        # Step 8B-Pre 新增
   -> ValidationReportModel + ViolationDetailModel
   -> 返回完整报告 + 所有违规明细
+
+POST /api/v1/corrections/                    # Step 9 前端集成
+  -> 创建 CorrectionJobModel
+  -> BackgroundTasks 执行修正
+  -> 返回 job_id + status
+
+GET /api/v1/corrections/{job_id}             # Step 9 前端集成
+  -> 返回修正任务状态 + plans
+
+GET /api/v1/corrections/{job_id}/download   # Step 9 前端集成
+  -> 返回 corrected_*.docx 文件
 
 POST /api/v1/documents/upload
 POST /api/v1/validations
@@ -84,7 +96,7 @@ POST /api/v1/corrections
 
 ## 下一步
 
-1. **Step 8B — 前端接入（Next.js）**：新建 Next.js 前端项目，接入后端 API
+1. **Step 9 — Correction Download 前端集成**：在报告页增加"生成修正/下载修正文档"入口
 
 2. **技术债务跟踪**：
    - API → application 下沉重构 — 中优先级（单独立项）

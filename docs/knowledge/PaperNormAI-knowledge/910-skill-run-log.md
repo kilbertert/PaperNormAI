@@ -183,7 +183,25 @@
 
 ---
 
+## 2026-05-14 - feature-development (Step 9)
+
+**场景**：Step 9 — Correction Download 前端集成，在报告页增加"生成修正/下载修正文档"入口
+**输入**：feature=Step 9 前端修正文档下载
+**结论**：完成 — 新增 correction API 调用函数、报告页修正按钮与轮询下载逻辑；SpecValidationResponse 追加 document_name
+**关联**：`clients/apps/web/src/lib/api.ts`、`clients/apps/web/src/lib/types.ts`、`clients/apps/web/src/app/spec/[sessionId]/page.tsx`、`clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx`、`backend/app/api/endpoints/spec_validation.py`
+
+---
+
+## 2026-05-15 - bugfix (DocumentRepository UUID type)
+
+**场景**：Step 9 correction endpoint 持续 404 — DocumentRepository 类型 mismatch bug
+**输入**：bug=corrections.py 返回 404 Document not found，但文档实际存在于 DB
+**结论**：完成 — 发现 DocumentRepository.find_by_id 用 raw SQL 返回字符串而非 UUID 对象；修复为 `user_id=UUID(row.user_id)`；修正后 correction endpoint 返回 202
+**关联**：`backend/app/infrastructure/persistence/document_repository.py`（find_by_id 修复）、`backend/app/api/endpoints/corrections.py`
+
+---
+
 ## 6. 更新记录
 
 **创建时间**：2026-05-01
-**最近更新**：2026-05-14 — 新增 Step 8B-Pre fix-development 记录 + GET /reports API
+**最近更新**：2026-05-15 — 新增 Step 9 bugfix (DocumentRepository UUID type)

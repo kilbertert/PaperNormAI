@@ -10,6 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import text
 
 from app.api.dependencies import get_db, get_current_user, CurrentUser
 from app.infrastructure.docling.parser import DoclingDocumentParser
@@ -17,7 +18,11 @@ from app.infrastructure.ai.openai_provider import OpenAIProvider
 from app.domain.services.rule_extraction_service import RuleExtractionService
 from app.domain.services.semantic_validation_service import SemanticValidationService
 from app.infrastructure.persistence.spec_session_repository import SpecSessionRepository
-from app.infrastructure.persistence.models import ValidationReportModel, ViolationDetailModel
+from app.infrastructure.persistence.document_repository import DocumentRepository
+from app.infrastructure.persistence.models import ValidationReportModel, ViolationDetailModel, DocumentModel
+from app.domain.entities.document import Document, DocumentStatus
+from app.core.config import settings
+from app.infrastructure.storage.file_storage import FileStorage
 
 router = APIRouter()
 
@@ -36,6 +41,7 @@ class SpecParseResponse(BaseModel):
 class SpecValidationResponse(BaseModel):
     session_id: str
     report_id: str
+    document_name: Optional[str] = None
     results_count: int
     error_count: int
     warning_count: int
@@ -196,11 +202,34 @@ async def validate_with_specification(
             )
             db.add(violation_model)
 
+        # Step 9: Persist thesis as DocumentModel (needed for correction pipeline)
+        doc_id = str(report.id)
+        storage = FileStorage(base_path=settings.upload_dir)
+        file_path = storage.store(tmp_path, doc_id)
+        file_hash = _calculate_file_hash(tmp_path)
+
+        # PGUUID + SQLite ORM limitation: use raw INSERT
+        db.execute(
+            text("""
+                INSERT INTO documents (id, user_id, original_filename, file_path, file_hash, template_id, status, uploaded_at, updated_at)
+                VALUES (:id, :user_id, :fn, :fp, :fh, NULL, :status, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """),
+            {
+                'id': doc_id,
+                'user_id': str(current_user.id),
+                'fn': document_file.filename,
+                'fp': str(file_path),
+                'fh': file_hash,
+                'status': DocumentStatus.COMPLETED.value,
+            }
+        )
+
         db.commit()
 
         return SpecValidationResponse(
             session_id=session_id,
             report_id=report_id,
+            document_name=document_file.filename,
             results_count=len(report.violations),
             error_count=sum(1 for v in report.violations if v.severity.value == "error"),
             warning_count=sum(1 for v in report.violations if v.severity.value == "warning"),

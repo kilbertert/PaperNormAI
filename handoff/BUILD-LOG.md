@@ -5,8 +5,8 @@
 
 ## Current Status
 
-**Active step:** Step 8A — Governance Hardening（architecture-check skill + feature-readiness 架构初筛）
-**Last cleared:** Step 7 — 2026-05-14
+**Active step:** Step 9 — Correction Download Frontend Integration
+**Last cleared:** Step 8B — 2026-05-14
 **Pending deploy:** NO (local development only)
 
 ### Architecture Gate（Step 7 收口）
@@ -165,7 +165,59 @@ Deploy: 不适用（开发阶段）
 
 ---
 
-### Step 8B — 前端接入（Next.js）（待立项）
+### Step 9 — Correction Download Frontend Integration — COMPLETE
+*Date: 2026-05-14*
+
+Files changed:
+- `backend/app/api/endpoints/spec_validation.py` — `SpecValidationResponse` 追加 `document_name` 字段；`POST /validate-with-spec` 在验证后持久化 thesis 为 `DocumentModel`（`file_path` 存储到 `uploads/`）
+- `backend/app/api/endpoints/corrections.py` — `CorrectionResponse` 追加 `error_message` 字段
+- `clients/apps/web/src/lib/types.ts` — 新增 `CorrectionJobResponse`、`CorrectionStatus` 接口；`CorrectionStatus` 含 `id/document_id/status/output_path/error_message/created_at/completed_at`
+- `clients/apps/web/src/lib/api.ts` — 新增 `createCorrectionJob`、`getCorrectionJob`、`getCorrectionDownloadUrl`
+- `clients/apps/web/src/app/spec/[sessionId]/page.tsx` — 简化跳转（去掉 URL query doc 参数）
+- `clients/apps/web/src/app/spec/[sessionId]/report/[reportId]/page.tsx` — 新增"Generate Corrected Document"按钮 + 2秒轮询 + Blob 下载逻辑
+
+Decisions made:
+- thesis 验证后立即以 `DocumentModel` 持久化到 `uploads/`（document_id = report_id），供 correction pipeline 使用
+- 前端轮询 `GET /corrections/{job_id}` 最多 60 次（120 秒超时）
+- 下载使用 `fetch` + `Authorization: Bearer` + `URL.createObjectURL`（避免 URL token 泄露）
+- `CorrectionStatus.error_message` 来自后端 `job.error_message`（修正失败时显示）
+
+Validation results:
+- ✅ `npm run build` 通过（6 routes 全部正确生成）
+- ✅ Python import 检查通过
+- ✅ `document_name` 已追加到 `SpecValidationResponse`
+- ✅ `error_message` 已追加到 `CorrectionResponse`
+- ✅ thesis 持久化到 DocumentModel（correction pipeline 可用 document_id）
+
+Deploy: 不适用（开发阶段）
+
+---
+
+### Step 8B — 前端接入（Next.js App Router）— COMPLETE
+*Date: 2026-05-14*
+
+---
+
+### Step 9 Bugfix — DocumentRepository UUID Type Fix — COMPLETE
+*Date: 2026-05-15*
+
+Files changed:
+- `backend/.env` — 新建（DEEPSEEK_API_KEY 等配置）
+- `backend/app/infrastructure/persistence/document_repository.py` — find_by_id 将 `user_id=row.user_id` 改为 `user_id=UUID(row.user_id)`
+
+Decisions made:
+- Raw SQL 返回字符串类型 UUID，ORM 模型构建时需显式转换为 UUID 对象
+- document.user_id (UUID) 与 current_user.id (UUID) 比较失败导致 403 Access Denied
+- 根本原因：find_by_id 用 raw SQL 查询但未将 user_id 转换为 UUID
+
+验证结果:
+- 修复后 POST /corrections/ 返回 202（之前返回 404）
+- GET /corrections/{job_id} 轮询返回 completed
+- Correction job 输出文件正确生成
+
+Deploy: 不适用（开发阶段）
+
+---
 
 ### Step 6 — KG-4 规则持久化 — COMPLETE
 *Date: 2026-05-06*
