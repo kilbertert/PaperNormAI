@@ -123,7 +123,11 @@ async def _run_correction_job(
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         writer = DocumentWriter()
-        writer.write_to_docx(modified_doc, output_path)
+        writer.write_to_docx(
+            modified_doc,
+            output_path,
+            Path(document.file_path),
+        )
 
         job.output_path = str(output_path)
         job.status = "completed"

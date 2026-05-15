@@ -193,6 +193,8 @@ class DocumentWriter:
         for element in parsed_document.elements:
             if element.index in element_to_para:
                 para_idx, para = element_to_para[element.index]
+                if element.style:
+                    para.style = element.style
                 self._apply_properties_to_paragraph(para, element.properties)
 
     def _write_element(self, doc: DocxDocument, element: DocumentElement) -> None:

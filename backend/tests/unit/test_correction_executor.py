@@ -276,3 +276,43 @@ class TestDocumentWriter:
         assert writer._extract_numeric_value("after: 1.0") == 1.0
         assert writer._extract_numeric_value("value is 2.5") == 2.5
         assert writer._extract_numeric_value("no number here") is None
+
+    def test_write_to_docx_preserves_custom_styles_from_original(self, tmp_path):
+        """Test writing via original doc preserves custom paragraph styles."""
+        try:
+            from docx import Document
+            from docx.enum.style import WD_STYLE_TYPE
+        except ImportError:
+            pytest.skip("python-docx not available")
+
+        from app.infrastructure.docx.document_writer import DocumentWriter
+
+        original_path = tmp_path / "original.docx"
+        output_path = tmp_path / "corrected.docx"
+
+        doc = Document()
+        custom_style = doc.styles.add_style("摘要正文", WD_STYLE_TYPE.PARAGRAPH)
+        paragraph = doc.add_paragraph("摘要内容")
+        paragraph.style = custom_style
+        doc.save(str(original_path))
+
+        parsed_document = ParsedDocument(
+            metadata=DocumentMetadata(title="测试文档"),
+            elements=[
+                DocumentElement(
+                    path="paragraph[1]",
+                    element_type="paragraph",
+                    content="摘要内容",
+                    style="摘要正文",
+                    properties=ElementProperties(),
+                    index=1,
+                )
+            ],
+            styles={},
+        )
+
+        writer = DocumentWriter()
+        writer.write_to_docx(parsed_document, output_path, original_path)
+
+        corrected = Document(str(output_path))
+        assert corrected.paragraphs[0].style.name == "摘要正文"

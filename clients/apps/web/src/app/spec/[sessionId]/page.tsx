@@ -28,7 +28,8 @@ export default function ThesisPage() {
       const res = await validateWithSpec(file, sessionId)
       setReportId(res.report_id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Validation failed')
+      const msg = err instanceof Error ? err.message : 'Validation failed'
+      setError(msg)
     } finally {
       setLoading(false)
     }
